@@ -10,7 +10,7 @@ transformers_logging.set_verbosity_error()
 import fitz  
 from transformers import pipeline
 
-# pdf_path = r"C:\Users\Manesha's Notebook\OneDrive\Desktop\CV_Chatbot\CV_Chatbot\" -------Need to give file location
+pdf_path = r"C:\Users\Manesha's Notebook\OneDrive\Desktop\CV_Chatbot\CV_Chatbot\temp.pdf" 
 
 if os.path.exists(pdf_path):
     print("File exists. Proceeding with extraction...")
@@ -30,7 +30,7 @@ def extract_text_from_pdf(pdf_path):
 pdf_text = extract_text_from_pdf(pdf_path)
 
 
-summarization_pipeline = pipeline("summarization", model="facebook/bart-large-cnn")
+summarization_pipeline = pipeline("summarization", model="facebook/bart-large-cnn")  
 
 
 summary = summarization_pipeline(pdf_text, max_length=150, min_length=50, do_sample=False)
