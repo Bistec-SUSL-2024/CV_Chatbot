@@ -1,8 +1,19 @@
-#Install PyPDF2
-
 import streamlit as st
 from PyPDF2 import PdfReader 
 
+# Inject custom CSS to change the sidebar background color to blue, bot response background to pink, and double the height of the prompt area
+st.markdown(
+    """
+    <style>
+       
+        /* Increase the height of the prompt input area (text input) */
+        textarea {
+            height: 100px !important; /* Double the default height */
+        }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # Function to extract text from PDF
 def extract_cv_text(uploaded_file):
@@ -23,12 +34,12 @@ if 'messages' not in st.session_state:
 if 'cv_text' not in st.session_state:
     st.session_state.cv_text = ""
 
-# Function to style messages with emojis
+# Function to style messages with emojis and CSS classes
 def display_message(text, is_user):
     if is_user:
-        return f"<div style='text-align: right; color: blue;'><strong>❓ You:</strong> {text}</div>"
+        return f"<div class='user-message'><strong>❓ You:</strong> {text}</div>"
     else:
-        return f"<div style='text-align: left; color: green;'><strong>🤖 Bot:</strong> {text}</div>"
+        return f"<div class='bot-message'><strong>🤖 Bot:</strong> {text}</div>"
 
 # Streamlit layout
 st.title("CV Analysis Chatbot - beta")
@@ -48,10 +59,12 @@ with st.sidebar:
     
     # Line separator
     st.markdown("<hr>", unsafe_allow_html=True)  # Horizontal line to separate sections
-    
-    # Prompt input area
+
+    # Form for prompt input and enter button
     st.write("# Ask a Question")
-    prompt = st.text_input("Ask your question here:", placeholder="Type your question...", key="prompt")
+    with st.form(key='question_form'):
+        prompt = st.text_area("Ask your question here:", placeholder="Type your question...", key="prompt")  # Use text_area instead of text_input
+        submit_button = st.form_submit_button(label="Enter")  # This acts as the "Enter" button inside the form
 
     if st.button("Clear Chat"):
         st.session_state.messages = []  # Clear chat history
@@ -68,8 +81,8 @@ with message_container:
         for message in st.session_state.messages:
             chat_history.markdown(message, unsafe_allow_html=True)
 
-# If the user enters a prompt
-if prompt:
+# If the user enters a prompt and clicks Enter
+if submit_button and prompt:
     if st.session_state.cv_text:
         # Generate response from chatbot (based on user prompt and CV text)
         response = generate_response(prompt, st.session_state.cv_text)
