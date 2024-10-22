@@ -12,6 +12,7 @@ from llama_index.core import (
 from llama_index.core.schema import MetadataMode
 from dotenv import load_dotenv
 
+
 load_dotenv()
 OpenAI_Key = os.getenv("OpenAI_Key")
 
@@ -28,14 +29,21 @@ PERSIST_DIR = "./storage"
 if not os.path.exists(PERSIST_DIR):
     documents = SimpleDirectoryReader("data").load_data()
     index = VectorStoreIndex.from_documents(documents)
-    # print(">>>>",documents[0].get_content(metadata_mode=MetadataMode.LLM))
     index.storage_context.persist(persist_dir=PERSIST_DIR)
 else:
     storage_context = StorageContext.from_defaults(persist_dir=PERSIST_DIR)
     index = load_index_from_storage(storage_context)
 
-    
+def query_cv(file_path, prompt):
+    if not os.path.exists(file_path):
+        raise FileNotFoundError("The specified CV file was not found.")
+    query_engine = index.as_query_engine()
+    response = query_engine.query(prompt)
 
-query_engine = index.as_query_engine()
-response = query_engine.query("Provide me name contact number and email of the owner of this CV")
-print(response)
+    if hasattr(response, 'some_attribute'):  # Replace with actual attribute(s)
+        return {
+            "content": response.some_attribute,  
+            "score": response.score if hasattr(response, 'score') else None,  
+        }
+    else:
+        return str(response)
