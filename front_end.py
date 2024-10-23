@@ -81,7 +81,7 @@ st.write("### Chatbot Responses:")
 if submit_button and prompt:
     if 'file_path' in st.session_state:  
         file_path = st.session_state.file_path
-        response = requests.post("http://localhost:8000/api/data_handle", json={"file_path": file_path, "prompt": prompt})
+        response = requests.post("http://127.0.0.1:8000/api/data_handle", json={"file_path": file_path, "prompt": prompt})
 
         if response.status_code == 200:
             data = response.json()
