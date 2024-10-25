@@ -54,15 +54,29 @@ def display_message(text, is_user):
 st.title("CV Analysis Chatbot - Phase_01")
 
 # Sidebar for CV upload----------------------------------------------------
-with st.sidebar:
-    st.write("# Upload Your CV")
-    uploaded_file = st.file_uploader("Upload CV (PDF)", type=["pdf"], label_visibility="collapsed")
 
-    if st.button("Submit CV"):
-        if uploaded_file is not None:
-            file_path = save_uploaded_file(uploaded_file)
-            st.session_state.file_path = file_path  
-            st.success("CV submitted successfully!")
+with st.sidebar:
+    st.write("# Upload Your CVs")
+    
+    # Allow multiple file uploads
+    uploaded_files = st.file_uploader("Upload CVs (PDF)", type=["pdf"], accept_multiple_files=True, label_visibility="collapsed")
+
+    # Submit button
+    if st.button("Submit CVs"):
+        if uploaded_files:
+            file_paths = []
+            
+            # Process each uploaded file
+            for uploaded_file in uploaded_files:
+                file_path = save_uploaded_file(uploaded_file)
+                file_paths.append(file_path)
+            
+            # Save all file paths to session state
+            st.session_state.file_paths = file_paths
+            st.success("All CVs submitted successfully!")
+        else:
+            st.warning("Please upload at least one CV.")
+
 
     st.markdown("<hr>", unsafe_allow_html=True)
 
