@@ -1,4 +1,3 @@
-
 import streamlit as st
 import requests
 import os
@@ -36,6 +35,22 @@ st.markdown(
             margin-bottom: 10px;
             text-align: right;
         }
+        .sidebar-upload-section {
+            background-color: #d1e7dd;
+            padding: 5px; 
+            border-radius: 10px;
+            margin-bottom: 5px;
+            margin-top: 2px; /
+        }
+        .sidebar-question-section {
+            background-color: #d9ecf2;
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .st-key-upload {
+            padding-top: 0px; 
+        }
+        
     </style>
     """,
     unsafe_allow_html=True
@@ -54,15 +69,14 @@ def display_message(text, is_user):
 st.title("CV Analysis Chatbot - Phase_01")
 
 # Sidebar for CV upload----------------------------------------------------
-
 with st.sidebar:
-    st.write("# Upload Your CVs")
+    st.write("#### Upload Your CVs", key="upload")
     
     # Allow multiple file uploads
-    uploaded_files = st.file_uploader("Upload CVs (PDF)", type=["pdf"], accept_multiple_files=True, label_visibility="collapsed")
+    uploaded_files = st.file_uploader("#### Upload CVs (PDF)", type=["pdf"], accept_multiple_files=True, label_visibility="collapsed", key="upfile")
 
     # Submit button
-    if st.button("Submit CVs"):
+    if st.button("Submit CVs", key="sub"):
         if uploaded_files:
             file_paths = []
             
@@ -77,18 +91,16 @@ with st.sidebar:
         else:
             st.warning("Please upload at least one CV.")
 
-
     st.markdown("<hr>", unsafe_allow_html=True)
 
     # Form for prompt input
-    st.write("# Ask a Question")
+    st.write("##### Ask a Question")
     with st.form(key='question_form'):
         prompt = st.text_area("Ask your questions here:", placeholder="Enter your question....", key="prompt")
         submit_button = st.form_submit_button(label="Ask")
 
     if st.button("Clear Chat"):
         st.session_state.messages = []
-
 
 st.write("### Chatbot Responses:")
 
