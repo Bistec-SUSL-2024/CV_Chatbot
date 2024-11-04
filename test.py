@@ -17,9 +17,9 @@ def save_uploaded_file(uploaded_file):
 
 
 st.markdown(
-    """
+     """
     <style>
-        /* Message styling */
+        /* Chat message styling */
         .user-message {
             background-color: #faeabe;
             color: black;
@@ -37,33 +37,59 @@ st.markdown(
             text-align: right;
         }
         
-        
-        
-        /* Responsive button styling */
-        .responsive-button {
-            width: 100%;
+        /* Fixed position for input form at the bottom */
+        .chat-input {
+            position: fixed;
+            bottom: 0;
+            width: 200%;
+            max-width: 1200px;
+            background-color: #333;
             padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            margin-top: 5px;
+            margin: 0 auto;
+            z-index: 999;
         }
         
-        /* Medium screens */
-        @media (min-width: 768px) {
-            .responsive-button {
-                padding: 12px;
-                font-size: 18px;
-            }
+        /* Increase the width of the input field */
+        .chat-input input[type="text"] {
+            width: 85%;
+            margin-right: 10px;
         }
         
-        /* Large screens */
-        @media (min-width: 992px) {
-            .responsive-button {
-                padding: 14px;
-                font-size: 20px;
-                width: 90%;
+        /* Main container padding to prevent overlap with input form */
+        .main-container {
+            padding-bottom: 260px;
+        }
+
+        /* Sidebar Responsiveness */
+        @media (max-width: 768px) {
+            .css-1lcbmhc.e1fqkh3o1 { /* Class for Streamlit's sidebar */
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .css-1lcbmhc.e1fqkh3o1:hover {
+                transform: translateX(0);
             }
         }
+        .chat-input {
+    position: fixed;
+    bottom: 0;
+    width: 160%;  /* Changed from 200% */
+    max-width: 1600px;  /* Increased from 1200px */
+    background-color: #333;
+    padding: 20px;  /* Increased padding */
+    margin: 0 auto;
+    z-index: 999;
+    left: 50%;
+    transform: translateX(-50%);  /* Center the chat input */
+}
+
+.chat-input input[type="text"] {
+    width: 150%;  /* Increased from 85% */
+    margin-right: 10px;
+    padding: 12px;  /* Added padding */
+    border-radius: 8px;  /* Added rounded corners */
+}
+
     </style>
     """,
     unsafe_allow_html=True
@@ -104,25 +130,31 @@ with st.sidebar:
         else:
             st.warning("Please upload at least one CV.")
 
-# Main Section for Chatbot Responses and Question Input
+# Main Section for Chatbot Responses
 st.write("### Chatbot Responses:")
+st.markdown("<div class='main-container'>", unsafe_allow_html=True)
 
 # Display chat history
 if st.session_state.messages:
     for message in st.session_state.messages:
-        st.markdown(message, unsafe_allow_html=True)  
+        st.markdown(message, unsafe_allow_html=True)
 
-# Form for question input in the main section
-#st.write("### Ask a Question")
+# Closing the main container div
+st.markdown("</div>", unsafe_allow_html=True)
+
+# Form for question input at the bottom
 with st.form(key='question_form'):
-    prompt = st.text_input(label="Ask your question here : ", placeholder="Enter your question....", key="prompt")
+    st.markdown("<div class='chat-input'>", unsafe_allow_html=True)
+    prompt = st.text_input(label="", placeholder="Enter your question....", key="prompt")
     
     # Arrange Ask and Clear Chat buttons side by side
     col1, col2 = st.columns([1, 1])
     with col1:
-        submit_button = st.form_submit_button(label="Ask", use_container_width=True)
-    with col2:
         clear_chat_button = st.form_submit_button(label="Clear Chat", on_click=lambda: st.session_state.messages.clear(), use_container_width=True)
+    with col2:
+        submit_button = st.form_submit_button(label="Ask", use_container_width=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # Handle form submission
 if submit_button and prompt:
