@@ -12,7 +12,7 @@ def read_pdf(file_path): #file reading part
             text += page.extract_text()
     return text
 
-cv_directory = 'E:/INTERN-BISTEC/Projects/V1/data'
+cv_directory = 'E:/INTERN-BISTEC/Projects/CV_Chatbot/V1/data' #E:\INTERN-BISTEC\Projects\CV_Chatbot\V1\data
 cv_texts = []
 cv_files = [f for f in os.listdir(cv_directory) if f.endswith('.pdf')]
 
