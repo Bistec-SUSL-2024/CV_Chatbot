@@ -26,7 +26,7 @@ def read_pdf(file_path):
     return preprocess_text(text)
 
 
-cv_directory = 'E:/INTERN-BISTEC/Projects/V1/data'
+cv_directory = 'E:/INTERN-BISTEC/Projects/CV_Chatbot/V1/data'
 cv_texts = []
 cv_files = [f for f in os.listdir(cv_directory) if f.endswith('.pdf')]
 
