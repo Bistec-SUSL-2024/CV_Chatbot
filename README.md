@@ -9,10 +9,10 @@ We’ve successfully deployed Phase-1 of CV Chatbot, which currently supports CV
 In this phase, you can upload a single CV and experience the CV analysis features firsthand. Try it out to see how the tool extracts and processes key information!
 
 # ✨ Features
-+**Automated CV Parsing:** Effortlessly extracts crucial information from resumes, including educational background, key skills, job experience, certifications, and even project highlights.
-+*Skill Matching:** Automatically detects relevant skills and compares them against a given job description or role requirements, ranking candidates based on skill relevance.
-+**Intelligent Chatbot Assistant:** The integrated AI chatbot is trained to answer a wide range of queries related to CV analysis—whether you're exploring a candidate’s technical strengths, soft skills, or specific experience.
-+**Ranking and Recommendation System:** Based on specific job requirements, the system can rank candidates, highlighting those with the best-fit profiles for a particular position.
++ **Automated CV Parsing:** Effortlessly extracts crucial information from resumes, including educational background, key skills, job experience, certifications, and even project highlights.
++ **Skill Matching:** Automatically detects relevant skills and compares them against a given job description or role requirements, ranking candidates based on skill relevance.
++ **Intelligent Chatbot Assistant:** The integrated AI chatbot is trained to answer a wide range of queries related to CV analysis—whether you're exploring a candidate’s technical strengths, soft skills, or specific experience.
++ **Ranking and Recommendation System:** Based on specific job requirements, the system can rank candidates, highlighting those with the best-fit profiles for a particular position.
 
 # 🎯 Key Benefits
 +**Efficient Candidate Evaluation:** Quickly identify top candidates by focusing on essential skills and qualifications.
