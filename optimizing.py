@@ -20,7 +20,7 @@ os.environ["PINECONE_API_KEY"] = Pinecone_API_Key
 
 
 pc = Pinecone(api_key=Pinecone_API_Key)
-index_name = "llama-integration-example"
+index_name = "llama-integration-cosine"
 if index_name not in pc.list_indexes().names():
     
     pc.create_index(
@@ -108,7 +108,7 @@ def query_cv(prompt):
 
 rebuild_index()
 
-prompt = "What are the contact numbers and emails of the owner of CV's?"
+prompt = "Who has the skills of quality assurance?"
 try:
     results = query_cv(prompt)
     print("Query Results:", results)
