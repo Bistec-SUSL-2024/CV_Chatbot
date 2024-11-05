@@ -8,7 +8,7 @@ from llama_index.core import (
 from dotenv import load_dotenv
 
 load_dotenv()
-OpenAI_Key = os.getenv("OpenAI_Key")
+OpenAI_Key = os.getenv("OPENAI_API_KEY")
 
 os.environ["OPENAI_API_KEY"] = OpenAI_Key
 
