@@ -35,6 +35,58 @@ st.markdown(
             margin-bottom: 10px;
             text-align: right;
         }
+           /* Fixed position for input form at the bottom */
+        .chat-input {
+            position: fixed;
+            bottom: 0;
+            width: 200%;
+            max-width: 1200px;
+            background-color: #333;
+            padding: 10px;
+            margin: 0 auto;
+            z-index: 999;
+        }
+        
+        /* Increase the width of the input field */
+        .chat-input input[type="text"] {
+            width: 85%;
+            margin-right: 10px;
+        }
+        
+        /* Main container padding to prevent overlap with input form */
+        .main-container {
+            padding-bottom: 260px;
+        }
+
+        /* Sidebar Responsiveness */
+        @media (max-width: 768px) {
+            .css-1lcbmhc.e1fqkh3o1 { /* Class for Streamlit's sidebar */
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .css-1lcbmhc.e1fqkh3o1:hover {
+                transform: translateX(0);
+            }
+        }
+        .chat-input {
+    position: fixed;
+    bottom: 0;
+    width: 160%;  /* Changed from 200% */
+    max-width: 1600px;  /* Increased from 1200px */
+    background-color: #333;
+    padding: 20px;  /* Increased padding */
+    margin: 0 auto;
+    z-index: 999;
+    left: 50%;
+    transform: translateX(-50%);  /* Center the chat input */
+}
+
+.chat-input input[type="text"] {
+    width: 150%;  /* Increased from 85% */
+    margin-right: 10px;
+    padding: 12px;  /* Added padding */
+    border-radius: 8px;  /* Added rounded corners */
+}
     </style>
     """,
     unsafe_allow_html=True
@@ -55,7 +107,7 @@ st.title("CV Analysis Chatbot - Phase_01")
 # Sidebar for CV upload----------------------------------------------------
 with st.sidebar:
     st.write("# Upload Your CV")
-    uploaded_file = st.file_uploader("Upload CV (PDF)", type=["pdf"], label_visibility="collapsed")
+    uploaded_file = st.file_uploader("Upload CV (PDF)", type=["pdf"], label_visibility="collapsed",key="upfile")
 
     if st.button("Submit CV"):
         if uploaded_file is not None:
