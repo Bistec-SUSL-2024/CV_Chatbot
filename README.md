@@ -35,8 +35,8 @@ In this phase, you can upload a single CV and experience the CV analysis feature
 + **HR Teams:** Automate the initial CV screening phase, making it faster and less subjective.
 + **Job Seekers and Career Coaches:** Analyze a CV to identify skill gaps, improve CV structure, and ensure alignment with specific roles.
 # 🛠️ Technology Stack
-+ **AI & NLP:** Powered by advanced natural language processing for extracting and understanding content within CVs.
-+ **Vector Database:** Stores extracted information in a structured format, allowing for quick retrieval and accurate ranking.
++ **AI :** Powered by llama index processing for extracting and understanding content within CVs.
++ **Vector Database:** Stores extracted information in a structured format, allowing for quick retrieval and accurate ranking using pinecone.
 + **Chatbot Interface:** Provides real-time, interactive responses to user queries, enhancing the overall user experience.
 
 
