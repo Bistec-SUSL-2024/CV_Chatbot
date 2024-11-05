@@ -3,8 +3,8 @@
 Welcome to CV Chatbot, an advanced AI-powered solution designed to make CV analysis smarter, faster, and more insightful. This application doesn’t just scan resumes—it thoroughly analyzes them to extract essential information on education, skills, work experience, and more. At the same time, our built-in chatbot brings an interactive experience, allowing users to get real-time insights, ask specific questions, and receive personalized assistance on CV evaluations.
 
 # 🌐 Live Demo (Phase-1)
-We’ve successfully deployed Phase-1 of CV Chatbot, which currently supports CV analysis for individual resumes.
-**Check it out here:** 
+We’ve successfully deployed Phase-1 of CV Chatbot, which currently supports CV analysis for individual resumes.<br>
+**Check it out here:** <br>
 👉 [CV Chatbot Phase-1 Demo] (https://cv-chatbot.streamlit.app/) 👈
 In this phase, you can upload a single CV and experience the CV analysis features firsthand. Try it out to see how the tool extracts and processes key information!
 
