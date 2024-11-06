@@ -1,4 +1,4 @@
-#!D:\SUSL\CV_Chatbot\myenv\Scripts\python.exe
+#!D:\SUSL\CV_Chatbot-phase2\CV_Chatbot\myenv\Scripts\python.exe
 import argparse
 import sys
 
