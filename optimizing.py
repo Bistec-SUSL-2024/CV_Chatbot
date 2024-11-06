@@ -3,13 +3,14 @@ import numpy as np
 from llama_index.core import (
     VectorStoreIndex,
     SimpleDirectoryReader,
+
 )
 from llama_index.core.schema import Node
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.vector_stores.pinecone import PineconeVectorStore
 from pinecone import Pinecone, ServerlessSpec
 from dotenv import load_dotenv
-
+from llama_index.core.vector_stores import VectorStoreQuery
 
 load_dotenv()
 OpenAI_Key = os.getenv("OpenAI_Key")
@@ -43,25 +44,25 @@ index = None
 
 def rebuild_index():
     global index
-
-    
-    if not os.listdir("data"):
-        print("Data directory is empty. Index will not be created.")
-        return
-
     documents = SimpleDirectoryReader("data").load_data()
 
-    existing_ids = set(item['id'] for item in pinecone_index.query(vector=[0]*1536, top_k=len(documents)).matches)
+    existing_ids = set()
+    fetch_response = pinecone_index.fetch(ids=[f"doc_{i}" for i in range(len(documents))])
 
+    
+    if fetch_response and 'vectors' in fetch_response:
+        existing_ids = set(fetch_response['vectors'].keys())
+
+    
     nodes = []
     for i, doc in enumerate(documents):
         doc_id = f"doc_{i}"
         if doc_id not in existing_ids:
+            
             vector = embed_model.get_text_embedding(doc.text)
             if vector is None or len(vector) != 1536:
                 print(f"Skipping document {doc_id} due to invalid embedding.")
                 continue
-
             node = Node(id_=doc_id, embedding=vector, metadata={"text": doc.text})
             nodes.append(node)
         else:
@@ -71,18 +72,19 @@ def rebuild_index():
     if nodes:
         vector_store.add(nodes=nodes)
         print("New documents have been embedded and stored in the Pinecone index.")
-        
-        index = VectorStoreIndex(nodes=nodes, vector_store=vector_store)
+
+    
+    all_nodes = []
+    for doc_id, doc_data in fetch_response.get('vectors', {}).items():
+        if 'values' in doc_data and len(doc_data['values']) == 1536:
+            metadata_text = doc_data.get('metadata', {}).get('text', "")
+            all_nodes.append(Node(id_=doc_id, embedding=doc_data['values'], metadata={"text": metadata_text}))
+    
+    if all_nodes:
+        index = VectorStoreIndex(nodes=all_nodes, vector_store=vector_store)
+        print("Index has been initialized from existing Pinecone data.")
     else:
-        # Load existing nodes into the index if no new documents were added
-        existing_nodes = [
-            Node(id_=match['id'], embedding=match['values'], metadata={"text": match.get('metadata', {}).get('text', "")})
-            for match in pinecone_index.query(vector=[0]*1536, top_k=len(documents)).matches
-            if 'values' in match and len(match['values']) == 1536  # Ensure only non-empty embeddings
-        ]
-        if existing_nodes:
-            index = VectorStoreIndex(nodes=existing_nodes, vector_store=vector_store)
-        print("All documents are already stored in the Pinecone index.")
+        print("No valid nodes were found to initialize the index.")
 
 
 
@@ -105,12 +107,13 @@ def query_cv(prompt):
 
     return response
 
-
 rebuild_index()
 
-prompt = "Who has the skills of quality assurance?"
+prompt = "I have a job that needs skills of node.js and express.js. Provide me best persons who has these skills?"
 try:
     results = query_cv(prompt)
-    print("Query Results:", results)
+    print("Query results are :", results)
+    
 except ValueError as e:
     print(e)
+
