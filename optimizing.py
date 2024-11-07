@@ -109,7 +109,7 @@ def query_cv(prompt):
 
 rebuild_index()
 
-prompt = "I have a job that needs skills of node.js and express.js. Provide me best persons who has these skills?"
+prompt = "I have a job that needs experience of project management. Provide me names who has these skills?"
 try:
     results = query_cv(prompt)
     print("Query results are :", results)
