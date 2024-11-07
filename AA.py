@@ -51,7 +51,7 @@ def extract_skills(content):
 
 def rebuild_index():
     global index, owner_names
-    owner_names = []  
+    owner_names = [] 
 
     clear_storage()
     cv_files = os.listdir("data")[:5]
@@ -76,7 +76,6 @@ def rebuild_index():
             print(f"Extracted content for {owner_name}: {len(content)} characters.")
 
             if content.strip():
-               
                 skills = extract_skills(content)
                 document = Document(content=content, metadata={"owner_name": owner_name, "skills": skills})
                 documents.append(document)
@@ -99,7 +98,7 @@ def query_cv(prompt):
     if index is None:
         raise ValueError("Index has not been initialized. Please check the data directory or persisted storage.")
 
-    
+    # Parse the prompt to look for skills or keywords
     required_skills = extract_skills(prompt)
     print(f"Searching for candidates with skills: {required_skills}")
 
@@ -113,28 +112,18 @@ def query_cv(prompt):
     response_text = str(response)
     print("Query response:", response_text)
 
-    # Retrieve documents from the storage context
+    # Use StorageContext to access stored documents
     storage_context = StorageContext(persist_dir=PERSIST_DIR)
-    indexed_documents = storage_context.documents  # Retrieve all stored documents
+    indexed_documents = storage_context.documents  
     
-    # Rank candidates by matching score
-    candidates_scores = []
+    
+    relevant_names = []
     for doc_id, document in indexed_documents.items():
         doc_skills = document.metadata.get("skills", [])
-        matching_score = sum(skill in doc_skills for skill in required_skills)  # Count matching skills
-        if matching_score > 0:  # Only consider candidates with at least one matching skill
-            candidates_scores.append((document.metadata["owner_name"], matching_score))
+        if all(skill in doc_skills for skill in required_skills):  
+            relevant_names.append(document.metadata["owner_name"])
 
-    # Sort candidates by score in descending order
-    ranked_candidates = sorted(candidates_scores, key=lambda x: x[1], reverse=True)
-
-    # Format results
-    if ranked_candidates:
-        ranked_list = "\n".join([f"{name}: {score} matching skills" for name, score in ranked_candidates])
-        return f"Ranked candidates by matching skills:\n{ranked_list}"
-    else:
-        return "No relevant information found in the documents."
-
+    return f"Candidates with required skills: {', '.join(relevant_names)}" if relevant_names else "No relevant information found in the documents."
 
 rebuild_index()
 
@@ -142,6 +131,6 @@ rebuild_index()
 result = query_cv("I have a job description that requires Python and Django skills. Who among these candidates has these skills?")
 print(result)
 
-print(query_cv("List all skills of each candidate."))
+
 print(query_cv("Who has experience with Python?"))
 print(query_cv("Who has managed projects in AWS?"))
