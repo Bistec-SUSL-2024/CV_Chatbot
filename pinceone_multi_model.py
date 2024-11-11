@@ -16,11 +16,11 @@ namespace = "example-namespace"
 embedding_dimension = 1024  
 
 
-if index_name in pc.list_indexes().names():
-    index_info = pc.describe_index(index_name)
-    if index_info['dimension'] != embedding_dimension:
-        pc.delete_index(index_name)
-        print(f"Index '{index_name}' with incorrect dimension deleted.")
+# if index_name in pc.list_indexes().names():
+#     index_info = pc.describe_index(index_name)
+#     if index_info['dimension'] != embedding_dimension:
+#         pc.delete_index(index_name)
+#         print(f"Index '{index_name}' with incorrect dimension deleted.")
 
 if index_name not in pc.list_indexes().names():
     pc.create_index(
