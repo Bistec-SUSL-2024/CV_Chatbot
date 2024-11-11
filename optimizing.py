@@ -21,7 +21,7 @@ os.environ["PINECONE_API_KEY"] = Pinecone_API_Key
 
 
 pc = Pinecone(api_key=Pinecone_API_Key)
-index_name = "llama-integration-cosine"
+index_name = "ranking-cv"
 if index_name not in pc.list_indexes().names():
     
     pc.create_index(
@@ -45,7 +45,7 @@ index = None
 def rebuild_index():
     global index
     documents = SimpleDirectoryReader("data").load_data()
-
+    
     existing_ids = set()
     fetch_response = pinecone_index.fetch(ids=[f"doc_{i}" for i in range(len(documents))])
 
@@ -109,7 +109,7 @@ def query_cv(prompt):
 
 rebuild_index()
 
-prompt = "Given a pool of CVs with project management experience, I need you to extract the names, email addresses, and contact numbers of the individuals who possess such skills. Please prioritize accuracy and provide the requested information in a concise and accessible format."
+prompt = "Given a pool of CVs, I need you to extract the names, email addresses, and contact numbers of the individuals who possess such skills. Please prioritize accuracy and provide the requested information in a concise and accessible format."
 try:
     results = query_cv(prompt)
     print("Query results are :", results)

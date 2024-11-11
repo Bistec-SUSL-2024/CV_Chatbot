@@ -27,7 +27,7 @@ def read_pdf(file_path):
             text += page.extract_text()
     return preprocess_text(text)
 
-cv_directory = 'E:/INTERN-BISTEC/Projects/CV_Chatbot/V1/data'
+cv_directory = './cv_input'
 cv_texts = []
 cv_files = [f for f in os.listdir(cv_directory) if f.endswith('.pdf')]
 
