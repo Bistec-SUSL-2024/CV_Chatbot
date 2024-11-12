@@ -3,27 +3,23 @@ from dotenv import load_dotenv
 from llama_index.embeddings.openai import OpenAIEmbedding
 from pinecone import Pinecone
 
-# Load environment variables
 load_dotenv()
 
-# Set OpenAI and Pinecone API keys
 OPENAI_API_KEY = os.getenv("OpenAI_Key")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 
-# Initialize OpenAI embedding model
+os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
+
 embed_model = OpenAIEmbedding()
 
-# Initialize Pinecone client
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
-# Define index and namespace
-index_name = "cv-markdown-index"  # Change to your Pinecone index name
-namespace = "cv-namespace"  # Ensure this is your correct namespace
+index_name = "cv-markdown-index"  
+namespace = ""  
 
-# Access the Pinecone index
 pinecone_index = pc.Index(index_name)
 
-# Function to generate embeddings using OpenAI's API for the job description
 def generate_embeddings(text):
     try:
         embedding = embed_model.get_text_embedding(text)
@@ -32,24 +28,33 @@ def generate_embeddings(text):
         print(f"Error generating embeddings: {e}")
         return None
 
-# Function to rank CVs based on the job description (query)
+#-----------------------------------------------Rank CV Function-----------------------------------------------------
+
 def rank_cvs_by_description(job_description):
-    # Generate the embedding for the job description
+    
     query_embedding = generate_embeddings(job_description)
     
     if query_embedding is None:
         print("Error: Failed to generate embedding for the job description.")
         return []
     
-    # Query Pinecone to find the most similar CVs
-    query_results = pinecone_index.query(
-        vector=query_embedding,
-        top_k=5,  # Get top 5 closest matches (can adjust based on need)
-        include_metadata=True,
-        namespace=namespace
-    )
+    try:
+        query_results = pinecone_index.query(
+            vector=query_embedding,
+            top_k=5,  
+            include_metadata=True,
+            namespace=namespace
+        )
+    except Exception as e:
+        print(f"Error querying Pinecone: {e}")
+        return []
     
-    # Process the query results (sorted by score)
+    
+    if not query_results.get('matches'):
+        print("No matches found in Pinecone for the given job description.")
+        return []
+
+    
     ranked_cvs = []
     for match in query_results['matches']:
         cv_id = match['id']
@@ -61,23 +66,30 @@ def rank_cvs_by_description(job_description):
             "metadata": metadata
         })
     
-    # Sort by score (most similar CVs first)
+
     ranked_cvs.sort(key=lambda x: x['score'], reverse=True)
     
     return ranked_cvs
 
-# Example usage
-if __name__ == "__main__":
-    job_description = "We are looking for a project manager with experience in leading teams and managing deadlines."
 
-    # Rank CVs based on the job description
+if __name__ == "__main__":
+    
+    try:
+        index_stats = pinecone_index.describe_index_stats(namespace=namespace)
+        if index_stats['namespaces'].get(namespace, {}).get('vector_count', 0) == 0:
+            print(f"No vectors found in the namespace '{namespace}'.")
+    except Exception as e:
+        print(f"Error accessing Pinecone index statistics: {e}")
+        exit(1)
+
+    job_description = "We are looking for a Psychologists who has experience with psychology."
+
     ranked_cvs = rank_cvs_by_description(job_description)
 
-    # Print the ranked CVs
     if ranked_cvs:
         print("Top ranked CVs based on job description:")
         for idx, cv in enumerate(ranked_cvs, 1):
             print(f"{idx}. CV ID: {cv['cv_id']}, Similarity Score: {cv['score']:.4f}")
-            print(f"   CV Text Excerpt: {cv['metadata']['text'][:300]}...")  # Display a snippet of the CV text
+            # print(f"   CV Text Excerpt: {cv['metadata']['text'][:300]}...") 
     else:
         print("No CVs found for ranking.")

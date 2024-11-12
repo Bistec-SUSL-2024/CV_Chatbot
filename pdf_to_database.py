@@ -161,50 +161,50 @@ upsert_markdown_embeddings()
 #-------------------Ranking part-----------------------------
 
 
-def rank_cvs_by_description(job_description):
-    # Generate the embedding for the job description
-    query_embedding = generate_embeddings(job_description)
+# def rank_cvs_by_description(job_description):
+#     # Generate the embedding for the job description
+#     query_embedding = generate_embeddings(job_description)
     
-    if query_embedding is None:
-        print("Error: Failed to generate embedding for the job description.")
-        return []
+#     if query_embedding is None:
+#         print("Error: Failed to generate embedding for the job description.")
+#         return []
     
-    # Query Pinecone to find the most similar CVs
-    query_results = pinecone_index.query(
-        vector=query_embedding,
-        top_k=5,  # Get top 5 closest matches (can adjust based on need)
-        include_metadata=True,
-        namespace=namespace
-    )
+#     # Query Pinecone to find the most similar CVs
+#     query_results = pinecone_index.query(
+#         vector=query_embedding,
+#         top_k=5,  # Get top 5 closest matches (can adjust based on need)
+#         include_metadata=True,
+#         namespace=namespace
+#     )
     
-    # Process the query results (sorted by score)
-    ranked_cvs = []
-    for match in query_results['matches']:
-        cv_id = match['id']
-        score = match['score']
-        metadata = match['metadata']
-        ranked_cvs.append({
-            "cv_id": cv_id,
-            "score": score,
-            "metadata": metadata
-        })
+#     # Process the query results (sorted by score)
+#     ranked_cvs = []
+#     for match in query_results['matches']:
+#         cv_id = match['id']
+#         score = match['score']
+#         metadata = match['metadata']
+#         ranked_cvs.append({
+#             "cv_id": cv_id,
+#             "score": score,
+#             "metadata": metadata
+#         })
     
-    # Sort by score (most similar CVs first)
-    ranked_cvs.sort(key=lambda x: x['score'], reverse=True)
+#     # Sort by score (most similar CVs first)
+#     ranked_cvs.sort(key=lambda x: x['score'], reverse=True)
     
-    return ranked_cvs
+#     return ranked_cvs
 
-# Example usage
-job_description = "We are looking for a project manager with experience in leading teams and managing deadlines."
+# # Example usage
+# job_description = "We are looking for a project manager with experience in leading teams and managing deadlines."
 
-# Rank CVs based on the job description
-ranked_cvs = rank_cvs_by_description(job_description)
+# # Rank CVs based on the job description
+# ranked_cvs = rank_cvs_by_description(job_description)
 
-# Print the ranked CVs
-if ranked_cvs:
-    print("Top ranked CVs based on job description:")
-    for idx, cv in enumerate(ranked_cvs, 1):
-        print(f"{idx}. CV ID: {cv['cv_id']}, Similarity Score: {cv['score']:.4f}")
-        print(f"   CV Text Excerpt: {cv['metadata']['text'][:300]}...")  # Display a snippet of the CV text
-else:
-    print("No CVs found for ranking.")
+# # Print the ranked CVs
+# if ranked_cvs:
+#     print("Top ranked CVs based on job description:")
+#     for idx, cv in enumerate(ranked_cvs, 1):
+#         print(f"{idx}. CV ID: {cv['cv_id']}, Similarity Score: {cv['score']:.4f}")
+#         print(f"   CV Text Excerpt: {cv['metadata']['text'][:300]}...")  # Display a snippet of the CV text
+# else:
+#     print("No CVs found for ranking.")
