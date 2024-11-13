@@ -99,24 +99,45 @@ def start_chatbot_with_cv(cv_id):
     cv_text = query_cv_by_id(cv_id)
     if cv_text:
         print("Starting the chatbot with the selected CV...\n")  
-        
-        document_node = Document(text=cv_text, doc_id=cv_id) 
         try:
-            index = VectorStoreIndex.from_documents([document_node], embed_model=embed_model, show_progress=True)
-            query_engine = index.as_query_engine()
+            fetch_response = pinecone_index.fetch(ids=[cv_id], namespace=namespace)
             
-            while True:
-                question = input("\nEnter your question (or type 'exit' to quit): ")
-                if question.lower() == 'exit':
-                    print("Exiting the chatbot.")
-                    break
+            if 'vectors' in fetch_response and cv_id in fetch_response['vectors']:
+                cv_metadata = fetch_response['vectors'][cv_id]['metadata']
+                cv_embedding = fetch_response['vectors'][cv_id]['values']  
+                cv_text = cv_metadata['text']
                 
-                response = query_engine.query(question)
-                print(f"Answer: {response}\n") 
-        except AttributeError as e:
-            print(f"Error: {e}. Please check if the document structure is compatible with VectorStoreIndex.")
+                document_node = Document(
+                    text=cv_text,
+                    doc_id=cv_id,
+                    embedding=cv_embedding  
+                )
+                
+                try:
+            
+                    index = VectorStoreIndex.from_documents([document_node], embed_model=embed_model, show_progress = False)
+                    query_engine = index.as_query_engine()
+                    
+                    while True:
+                        question = input("\nEnter your question (or type 'exit' to quit): ")
+                        if question.lower() == 'exit':
+                            print("Exiting the chatbot.")
+                            break
+                        
+                        response = query_engine.query(question)
+                        print(f"Answer: {response}\n")
+                except AttributeError as e:
+                    print(f"Error: {e}. Please check if the document structure is compatible with VectorStoreIndex.")
+            else:
+                print(f"No vectors found for CV ID {cv_id}")
+        except Exception as e:
+            print(f"Error fetching CV by ID {cv_id}: {e}")
 
 
+
+
+
+#-----------------------------------------Main--------------------------------------------------------------
 
 
 if __name__ == "__main__":
