@@ -21,47 +21,30 @@ st.markdown(
             margin-bottom: 10px;
             text-align: right;
         }
-
-        /* Fixed position for input form at the bottom */
-        .chat-input {
-            position: fixed;
-            bottom: 0;
-            width: 160%;
-            max-width: 1600px;
-            background-color: #333;
-            padding: 20px;
-            margin: 0 auto;
-            z-index: 999;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .chat-input input[type="text"] {
-            width: 150%;
-            margin-right: 10px;
-            padding: 12px;
-            border-radius: 8px;
-        }
-
-        .main-container {
-            padding-bottom: 260px;
-        } 
         .stButton > button {
-        font-size: 6px;
-        padding: 1px 3px;  
+            font-size: 6px;
+            padding: 1px 3px;  
         }
         .candidates-section {
             background-color: #444;
             padding: 5px;
             border-radius: 10px;
             color: white;
-            margin-bottom: 3px;
+            margin-bottom: 5px;
+        }
+        .ask-more-info {
+            background-color: #555;
+            color: white;
+            padding: 5px;
+            border-radius: 10px;
+            margin-bottom: 5px;
         }
     </style>
     """,
     unsafe_allow_html=True
 )
 
+# Initialize session states
 if 'cv_results' not in st.session_state:
     st.session_state.cv_results = []
 if 'messages' not in st.session_state:
@@ -82,6 +65,7 @@ st.title("CV Analysis Chatbot - Phase_02")
 def clear_text():
     st.session_state["job_desc"] = ""
 
+# Job description input
 st.markdown(
     """
     <div style='background-color: #333; padding: 4px; border-top-left-radius: 10px; border-top-right-radius: 10px;'>
@@ -90,26 +74,26 @@ st.markdown(
     """, 
     unsafe_allow_html=True
 )
-job_description = st.text_area(label="type here ", placeholder="Enter job description here...",label_visibility="collapsed")
+job_description = st.text_area(label="type here " , placeholder="Enter job description here...", label_visibility="collapsed")
 
 col1, col2 = st.columns(2)
 
 with col1:
-    st.button("clear description", on_click=clear_text ,use_container_width=True)
+    st.button("clear description", on_click=clear_text, use_container_width=True)
 
 with col2:
-    if st.button("Submit description",use_container_width=True):
-        # Here you would add code to handle the submission
+    if st.button("Submit description", use_container_width=True):
+        # Simulated results for demonstration
         st.session_state.cv_results = [
-        {"id": 1, "title": "Candidate 1"},
-        {"id": 2, "title": "Candidate 2"},
-        {"id": 3, "title": "Candidate 3"},
-        {"id": 4, "title": "Candidate 4"},
-        {"id": 5, "title": "Candidate 5"}
-    ]
-    st.session_state.show_chat = False  # Reset chat visibility when new CVs are loaded
+            {"id": 1, "title": "Candidate 1"},
+            {"id": 2, "title": "Candidate 2"},
+            {"id": 3, "title": "Candidate 3"},
+            {"id": 4, "title": "Candidate 4"},
+            {"id": 5, "title": "Candidate 5"}
+        ]
+        st.session_state.show_chat = False  # Reset chat visibility when new CVs are loaded
 
-
+# Displaying candidates list
 if st.session_state.cv_results:
     st.markdown("<div class='candidates-section'><h6>Relevant Candidates:</h6>", unsafe_allow_html=True)
     for result in st.session_state.cv_results:
@@ -117,42 +101,34 @@ if st.session_state.cv_results:
         with col1:
             st.write(f"**{result['title']}**")
         with col2:
-            if st.button(f"Show CV", key=f"show_cv_{result['id']}" ):
+            if st.button(f"Show CV", key=f"show_cv_{result['id']}"):
                 st.write(f"Displaying {result['title']} details (Placeholder)")
         with col3:
-            if st.button(f"Ask more info....", key=f"ask_question_{result['id']}"):
+            if st.button(f"Ask more info...", key=f"ask_question_{result['id']}"):
                 st.session_state.show_chat = True  
-                st.session_state.current_cv = result['title']  
+                st.session_state.current_cv = result['title']
 
-
+# Chat sidebar
 if st.session_state.show_chat:
-    st.markdown("<div class='main-container'>", unsafe_allow_html=True)
-    st.write(f"### Chat for {st.session_state.current_cv}")
-
- 
-    for message in st.session_state.messages:
-        st.markdown(message, unsafe_allow_html=True)
-
-   
-    with st.form(key='question_form'):
-        st.markdown("<div class='chat-input'>", unsafe_allow_html=True)
-        prompt = st.text_input(label="ask", label_visibility="collapsed", placeholder="Enter your question....", key="prompt")
+    with st.sidebar:
+        st.markdown(f"<div class='ask-more-info'><h4>Ask more info. about {st.session_state.current_cv} :</h4></div>", unsafe_allow_html=True)
         
+        # Display existing messages
+        for message in st.session_state.messages:
+            st.markdown(message, unsafe_allow_html=True)
         
-        col1, col2 = st.columns([1, 1])
-        with col1:
-            clear_chat_button = st.form_submit_button(label="Clear Chat", on_click=lambda: st.session_state.messages.clear(), use_container_width=True)
-        with col2:
-            submit_button = st.form_submit_button(label="Ask", use_container_width=True)
+        # Form for user input
+        with st.form(key='question_form'):
+            prompt = st.text_input(label="Ask a question", label_visibility="collapsed", placeholder="Enter your question...", key="prompt")
+            
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                clear_chat_button = st.form_submit_button(label="Clear Chat", on_click=lambda: st.session_state.messages.clear(), use_container_width=True)
+            with col2:
+                submit_button = st.form_submit_button(label="Ask", use_container_width=True)
         
-        st.markdown("</div>", unsafe_allow_html=True)
-
-   
-    if submit_button and prompt:
-        
-        chatbot_response = f"Response for '{prompt}' regarding {st.session_state.current_cv} (Placeholder)"
-        st.session_state.messages.append(display_message(prompt, is_user=True))
-        st.session_state.messages.append(display_message(chatbot_response, is_user=False))
-
-    
-    st.markdown("</div>", unsafe_allow_html=True)
+        # Handling new message
+        if submit_button and prompt:
+            chatbot_response = f"Response for '{prompt}' regarding {st.session_state.current_cv} (Placeholder)"
+            st.session_state.messages.append(display_message(prompt, is_user=True))
+            st.session_state.messages.append(display_message(chatbot_response, is_user=False))
