@@ -53,6 +53,8 @@ if 'show_chat' not in st.session_state:
     st.session_state.show_chat = False
 if 'current_cv' not in st.session_state:
     st.session_state.current_cv = None
+if 'job_desc' not in st.session_state:
+    st.session_state.job_desc = ""
 
 def display_message(text, is_user):
     if is_user:
@@ -63,7 +65,12 @@ def display_message(text, is_user):
 st.title("CV Analysis Chatbot - Phase_02")
 
 def clear_text():
-    st.session_state["job_desc"] = ""
+    # Reset all session states to initial values
+    st.session_state.cv_results = []
+    st.session_state.messages = []
+    st.session_state.show_chat = False
+    st.session_state.current_cv = None
+    st.session_state.job_desc = ""
 
 # Job description input
 st.markdown(
@@ -74,7 +81,7 @@ st.markdown(
     """, 
     unsafe_allow_html=True
 )
-job_description = st.text_area(label="type here " , placeholder="Enter job description here...", label_visibility="collapsed")
+job_description = st.text_area(label="type here ", placeholder="Enter job description here...", label_visibility="collapsed", key="job_desc")
 
 col1, col2 = st.columns(2)
 
