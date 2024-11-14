@@ -45,6 +45,17 @@ st.markdown(
 
         .main-container {
             padding-bottom: 260px;
+        } 
+        .stButton > button {
+        font-size: 6px;
+        padding: 1px 3px;  
+        }
+        .candidates-section {
+            background-color: #444;
+            padding: 5px;
+            border-radius: 10px;
+            color: white;
+            margin-bottom: 3px;
         }
     </style>
     """,
@@ -73,21 +84,21 @@ def clear_text():
 
 st.markdown(
     """
-    <div style='background-color: #333; padding: 4px; border-radius: 10px;'>
-        <h7 style='color: white;'>Input the job description :</h7>
+    <div style='background-color: #333; padding: 4px; border-top-left-radius: 10px; border-top-right-radius: 10px;'>
+        <h6 style='color: white;'>Input the job description :</h6>
     </div>
     """, 
     unsafe_allow_html=True
 )
-job_description = st.text_area(label=" ", placeholder="Enter job description here...")
+job_description = st.text_area(label="type here ", placeholder="Enter job description here...",label_visibility="collapsed")
 
 col1, col2 = st.columns(2)
 
 with col1:
-    st.button("clear description", on_click=clear_text)
+    st.button("clear description", on_click=clear_text ,use_container_width=True)
 
 with col2:
-    if st.button("Show Job Description"):
+    if st.button("Submit description",use_container_width=True):
         # Here you would add code to handle the submission
         st.session_state.cv_results = [
         {"id": 1, "title": "Candidate 1"},
@@ -100,16 +111,16 @@ with col2:
 
 
 if st.session_state.cv_results:
-    st.write("##### Relevant Candidates:")
+    st.markdown("<div class='candidates-section'><h6>Relevant Candidates:</h6>", unsafe_allow_html=True)
     for result in st.session_state.cv_results:
-        col1, col2, col3 = st.columns([2, 1, 1])
+        col1, col2, col3 = st.columns([6, 2, 2])
         with col1:
             st.write(f"**{result['title']}**")
         with col2:
-            if st.button(f"Show CV", key=f"show_cv_{result['id']}"):
+            if st.button(f"Show CV", key=f"show_cv_{result['id']}" ):
                 st.write(f"Displaying {result['title']} details (Placeholder)")
         with col3:
-            if st.button(f"Ask more...", key=f"ask_question_{result['id']}"):
+            if st.button(f"Ask more info....", key=f"ask_question_{result['id']}"):
                 st.session_state.show_chat = True  
                 st.session_state.current_cv = result['title']  
 
