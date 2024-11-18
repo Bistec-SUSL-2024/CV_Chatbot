@@ -74,7 +74,7 @@ os.environ["PINECONE_API_KEY"] = Pinecone_API_Key
 
 pc = Pinecone(api_key=Pinecone_API_Key)
 
-index_name = "cv-markdown-index"
+index_name = "cv-markdown-index-2"
 namespace = ""
 embedding_dimension = 1536  
 
@@ -111,7 +111,7 @@ def document_exists_in_pinecone(doc_id):
 #---------------------------------Function to upsert data to index-------------------------------------------
 
 def upsert_markdown_embeddings():
-    new_docs_dir = "new_docs"  
+    new_docs_dir = "new_docs"
     existing_docs = os.listdir(new_docs_dir)
     upserted_docs = []
 
@@ -139,5 +139,3 @@ def upsert_markdown_embeddings():
 
 
 upsert_markdown_embeddings()
-
-
