@@ -87,10 +87,10 @@ job_description = st.text_area(label="type here ", placeholder="Enter job descri
 col1, col2 = st.columns(2)
 
 with col1:
-    st.button("clear description", on_click=clear_text, use_container_width=True)
+    st.button("clear description", on_click=clear_text, use_container_width=True, key="clear_description")
 
 with col2:
-    if st.button("Submit description", use_container_width=True):
+    if st.button("Submit description", use_container_width=True, key="submit_description"):
         
         st.session_state.cv_results = [
             {"id": 1, "title": "Candidate 1"},
@@ -114,6 +114,34 @@ if st.session_state.cv_results:
             if st.button(f"Ask more info...", key=f"ask_question_{result['id']}"):
                 st.session_state.show_chat = True  
                 st.session_state.current_cv = result['title']
+
+
+# backend connenct
+def get_backend_response(user_input):
+    try:
+        response = requests.post(
+            "http://localhost:8000/ask",  # Update with your backend URL
+            json={"cv_id": st.session_state.current_cv, "question": user_input}
+        )
+        return response.json().get('answer', "Sorry, I couldn't get an answer.")
+    except Exception as e:
+        return f"Error connecting to backend: {e}"
+
+# Example: Call rank_cvs_by_description from backend
+if st.button("Submit description", use_container_width=True):
+    try:
+        response = requests.post(
+            "http://localhost:8000/rank_cvs",
+            json={"description": job_description}
+        )
+        st.session_state.cv_results = response.json().get("ranked_cvs", [])
+        st.session_state.show_chat = False
+    except Exception as e:
+        st.error(f"Error connecting to backend: {e}")
+
+
+
+
 
 # Chat sidebar
 if st.session_state.show_chat:
@@ -141,14 +169,5 @@ if st.session_state.show_chat:
             st.session_state.messages.append(display_message(prompt, is_user=True))
             st.session_state.messages.append(display_message(chatbot_response, is_user=False))
 
-# backend connenct
-def get_backend_response(user_input):
-    try:
-        response = requests.post(
-            "https://your-backend-api.com/ask",  # Backend URL
-            json={"question": user_input}
-        )
-        # Assuming the backend returns a JSON response with 'answer'
-        return response.json().get('answer', "Sorry, I couldn't get an answer.")
-    except Exception as e:
-        return f"Error connecting to backend: {e}"
+
+

@@ -44,6 +44,7 @@ def rank_cvs_by_description(job_description):
     
     query_embedding = generate_embeddings(job_description)
     
+    
     if query_embedding is None:
         print("Error: Failed to generate embedding for the job description.")
         return []
@@ -69,7 +70,7 @@ def rank_cvs_by_description(job_description):
     print(f"Found {len(ranked_cvs)} CVs for ranking.")  
     return ranked_cvs
 
-#-------------------------------------------------Query Function-----------------------------------------------------------
+#-------------------------------------------------CV Selection Function-----------------------------------------------------------
 
 def query_cv_by_id(cv_id):
     print(f"Fetching details for CV ID {cv_id}...")  
