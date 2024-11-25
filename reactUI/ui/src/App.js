@@ -37,8 +37,8 @@ const App = () => {
   const clearChat = () => setMessages([]);
 
   return (
-    <div className="App">
-      <h1>CV Analysis Chatbot - V 2.0</h1>
+    <div className="App"> 
+      <h1>CVBot</h1>
 
       {/* Job Description Section */}
       <div>
@@ -86,7 +86,7 @@ const App = () => {
                 key={index}
                 className={msg.isUser ? 'user-message' : 'bot-message'}
               >
-                <strong>{msg.isUser ? '❓ You:' : '🤖 Bot:'}</strong> {msg.text}
+                <strong>{msg.isUser ? '💀 You:' : '👽 Bot:'}</strong> {msg.text}
               </div>
             ))}
           </div>
