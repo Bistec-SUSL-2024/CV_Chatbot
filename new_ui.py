@@ -126,7 +126,6 @@ def start_chatbot_for_cv(cv_id):
         st.error(f"Error starting chatbot: {e}")
 
 
-
 # Display CV results
 if st.session_state.cv_results:
     st.markdown("<div class='candidates-section'><h6>Ranked Candidates:</h6>", unsafe_allow_html=True)
@@ -136,19 +135,15 @@ if st.session_state.cv_results:
             st.write(f"**{idx}. {result['cv_id']}** (Score: {result['score']:.2f})")
         with col2:
             if st.button(f"Show CV", key=f"show_cv_{result['cv_id']}"):
-                st.write(f"Displaying details of **{result['cv_id']}** (Placeholder)")
+                st.write(f"Displaying details of **{result['cv_id']}** (Placeholder) ")
         with col3:
             if st.button(f"Ask more info...", key=f"ask_question_{result['cv_id']}"):
                 st.session_state.show_chat = True  
                 st.session_state.current_cv = result['cv_id']
-                
-                # Trigger the start of chatbot for the selected CV
                 start_chatbot_for_cv(result['cv_id'])
 
 
-
-
-
+# Frontend: Get response from the backend based on user input question
 def get_backend_response(user_input):
     try:
         response = requests.post(
@@ -162,12 +157,12 @@ def get_backend_response(user_input):
     except Exception as e:
         return f"Error connecting to backend: {e}"
 
-
 # Chat sidebar
 if st.session_state.show_chat:
     with st.sidebar:
-        st.markdown(f"<div class='ask-more-info'><h4>Ask more info. about {st.session_state.current_cv} :</h4></div>", unsafe_allow_html=True)
-        
+        st.markdown(f"<div class='ask-more-info'><h4>Ask more info about {st.session_state.current_cv} :</h4></div>", unsafe_allow_html=True)
+
+        # Display previous conversation
         for message in st.session_state.messages:
             st.markdown(message, unsafe_allow_html=True)
         
@@ -186,3 +181,6 @@ if st.session_state.show_chat:
             chatbot_response = get_backend_response(prompt)  # Get response from backend
             st.session_state.messages.append(display_message(prompt, is_user=True))
             st.session_state.messages.append(display_message(chatbot_response, is_user=False))
+            
+            # Re-run the app to maintain the sidebar chat session
+            st.rerun()
