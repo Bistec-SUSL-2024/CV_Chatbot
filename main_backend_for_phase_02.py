@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from main_backend_model import rank_cvs_by_description, query_cv_by_id, start_chatbot_with_cv
+from main_backend_model import rank_cvs_by_description, query_cv_by_id, start_chatbot_with_cv, show_cv
 
 
 
@@ -15,6 +15,9 @@ class CVQuery(BaseModel):
 class ChatbotRequest(BaseModel):
     cv_id: str
     question: str
+
+class ShowCVRequest(BaseModel):
+    cv_id: str
 
 @app.post("/rank_cvs")
 def rank_cvs(job_description: JobDescription):
@@ -50,3 +53,15 @@ def chatbot(query: ChatbotRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+
+@app.post("/show_cv")
+def handle_show_cv(request: ShowCVRequest):
+    try:
+        result = show_cv(request.cv_id)
+        if result["success"]:
+            return {"message": result["message"]}
+        else:
+            raise HTTPException(status_code=404, detail=result["message"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error showing CV: {str(e)}")

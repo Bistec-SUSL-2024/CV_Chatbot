@@ -8,6 +8,7 @@ from llama_index.core.schema import Node, Document
 from pinecone import Pinecone
 from fuzzywuzzy import process
 from fastapi import HTTPException
+import re
 
 
 load_dotenv()
@@ -142,20 +143,17 @@ def start_chatbot_with_cv(cv_id, question):
                 cv_embedding = fetch_response['vectors'][cv_id]['values']  
                 cv_text = cv_metadata['text']
                 
-                # Create a document node
                 document_node = Document(
                     text=cv_text,
                     doc_id=cv_id,
                     embedding=cv_embedding  
                 )
                 
-                # Create the query engine
                 index = VectorStoreIndex.from_documents([document_node], embed_model=embed_model, show_progress=False)
                 query_engine = index.as_query_engine()
 
-                # Process the user's question
                 response = query_engine.query(question)
-                return {"answer": str(response)}  # Return the answer in the response
+                return {"answer": str(response)}  
                 
             else:
                 raise HTTPException(status_code=404, detail="No vectors found for CV ID")
@@ -165,10 +163,44 @@ def start_chatbot_with_cv(cv_id, question):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def normalize_string(s):
-    return s.replace('_', ' ').lower()
+# def normalize_string(s):
+#     return s.replace('_', ' ').lower()
 
 #--------------------------------------------------Show CV Function-----------------------------------------------------
+
+# def show_cv(cv_id):
+#     print(f"Searching for the original CV with ID '{cv_id}'...")
+
+#     normalized_cv_id = normalize_string(cv_id)
+
+#     data_folder = Path("./data")
+#     if not data_folder.exists():
+#         print("Error: 'data' folder does not exist.")
+#         return
+    
+#     pdf_files = list(data_folder.glob("*.pdf"))
+
+#     normalized_filenames = [(normalize_string(file.stem), file) for file in pdf_files]
+
+#     best_match = process.extractOne(normalized_cv_id, [filename[0] for filename in normalized_filenames])
+
+#     if best_match and best_match[1] >= 80: 
+#         matched_file = next(file for name, file in normalized_filenames if normalize_string(file.stem) == best_match[0])
+#         print(f"Found CV: {matched_file}")
+        
+#         try:
+#             webbrowser.open(matched_file.resolve().as_uri())
+#             print(f"Opening CV '{matched_file.name}'...")
+#         except Exception as e:
+#             print(f"Error opening CV PDF: {e}")
+#     else:
+#         print(f"No matching CV PDF found for ID '{cv_id}'.")
+#         print("Check if the CV files are named correctly in the 'data' folder.")
+
+
+def normalize_string(s):
+    # Normalizes a string for comparison
+    return re.sub(r"[\W_]+", "", s).lower()
 
 def show_cv(cv_id):
     print(f"Searching for the original CV with ID '{cv_id}'...")
@@ -178,7 +210,7 @@ def show_cv(cv_id):
     data_folder = Path("./data")
     if not data_folder.exists():
         print("Error: 'data' folder does not exist.")
-        return
+        return {"success": False, "message": "Data folder does not exist."}
     
     pdf_files = list(data_folder.glob("*.pdf"))
 
@@ -193,12 +225,13 @@ def show_cv(cv_id):
         try:
             webbrowser.open(matched_file.resolve().as_uri())
             print(f"Opening CV '{matched_file.name}'...")
+            return {"success": True, "message": f"Opened CV '{matched_file.name}' successfully."}
         except Exception as e:
             print(f"Error opening CV PDF: {e}")
+            return {"success": False, "message": f"Error opening CV: {e}"}
     else:
         print(f"No matching CV PDF found for ID '{cv_id}'.")
-        print("Check if the CV files are named correctly in the 'data' folder.")
-
+        return {"success": False, "message": f"No matching CV PDF found for ID '{cv_id}'."}
 
 #-------------------------------------------------Main Section------------------------------------------------------
 
@@ -215,12 +248,10 @@ if __name__ == "__main__":
         selected_cv_idx = int(input("\nEnter the number of the CV you want to select: "))
         selected_cv_id = ranked_cvs[selected_cv_idx - 1]["cv_id"]
     
-        # Option to show the original CV PDF
         show_original = input("Would you like to view the original CV PDF? (yes/no): ").strip().lower()
         if show_original in ["yes", "y"]:
             show_cv(selected_cv_id)
 
-        # Start the chatbot with the selected CV
         start_chatbot_with_cv(selected_cv_id)
     else:
         print("No CVs found for ranking.")
