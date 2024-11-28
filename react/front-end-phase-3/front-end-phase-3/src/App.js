@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './App.css'; // Import the CSS styles
+import './App.css';
 
 const App = () => {
   const [jobDescription, setJobDescription] = useState('');
@@ -10,15 +10,14 @@ const App = () => {
   const [prompt, setPrompt] = useState('');
 
   const handleShowJobDescription = () => {
-    // Simulated CV results
     setCvResults([
-      { id: 1, title: 'Candidate 1' },
-      { id: 2, title: 'Candidate 2' },
-      { id: 3, title: 'Candidate 3' },
-      { id: 4, title: 'Candidate 4' },
-      { id: 5, title: 'Candidate 5' },
+      { id: 1, title: 'CV1' },
+      { id: 2, title: 'CV2' },
+      { id: 3, title: 'CV3' },
+      { id: 4, title: 'CV4' },
+      { id: 5, title: 'CV5' },
     ]);
-    setShowChat(false); // Reset chat visibility when new CVs are loaded
+    setShowChat(false);
   };
 
   const handleSendMessage = () => {
@@ -26,7 +25,7 @@ const App = () => {
 
     const userMessage = { text: prompt, isUser: true };
     const botResponse = {
-      text: `Response for '${prompt}' regarding ${currentCv} (Placeholder)`,
+      text: `Response for '${prompt}' regarding ${currentCv}`,
       isUser: false,
     };
 
@@ -36,11 +35,17 @@ const App = () => {
 
   const clearChat = () => setMessages([]);
 
-  return (
-    <div className="App"> 
-      <h1>CV Analysis Chatbot - Phase 3</h1>
+  const closeChat = () => {
+    setShowChat(false);
+    clearChat();
+    setCurrentCv(null);
+  };
 
-      {/* Job Description Section */}
+  return (
+    <div className="App">
+      <h1>CVBot</h1>
+
+      {/* Job Description Input */}
       <div>
         <h3>Enter Job Description:</h3>
         <textarea
@@ -67,40 +72,40 @@ const App = () => {
                   setCurrentCv(cv.title);
                 }}
               >
-                Ask more info...
+                Ask Question
               </button>
             </div>
           ))}
         </div>
       )}
 
-      {/* Chat Section */}
+      {/* Chat Popup */}
       {showChat && (
-        <div className="chat-container">
-          <h3>Chat for {currentCv}</h3>
+        <div className="popup-overlay">
+          <div className="popup">
+            <h3>Chat for {currentCv}</h3>
+            <button onClick={closeChat}>Close</button>
 
-          {/* Messages */}
-          <div className="chat-messages">
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={msg.isUser ? 'user-message' : 'bot-message'}
-              >
-                <strong>{msg.isUser ? '💀 You:' : '👽 Bot:'}</strong> {msg.text}
-              </div>
-            ))}
-          </div>
+            {/* Chat Messages */}
+            <div className="chat-messages">
+              {messages.map((msg, index) => (
+                <div key={index} className={msg.isUser ? 'user-message' : 'bot-message'}>
+                  {msg.isUser ? '🧑' : '🤖'} {msg.text}
+                </div>
+              ))}
+            </div>
 
-          {/* Chat Input */}
-          <div className="chat-input">
-            <input
-              type="text"
-              placeholder="Enter your question..."
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-            />
-            <button onClick={clearChat}>Clear Chat</button>
-            <button onClick={handleSendMessage}>Ask</button>
+            {/* Chat Input */}
+            <div>
+              <input
+                type="text"
+                placeholder="Enter your question..."
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+              />
+              <button onClick={clearChat}>Clear Chat</button>
+              <button onClick={handleSendMessage}>Ask</button>
+            </div>
           </div>
         </div>
       )}
