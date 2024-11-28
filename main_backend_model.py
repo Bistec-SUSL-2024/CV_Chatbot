@@ -141,13 +141,14 @@ def query_cv_by_id(cv_id):
 #             # Fetch the CV from Pinecone
 #             fetch_response = pinecone_index.fetch(ids=[cv_id], namespace=namespace)
 # =======
-def start_chatbot_with_cv(cv_id):
-    cv_text = query_cv_by_id(cv_id)
-    if cv_text:
-        print("Starting the chatbot with the selected CV...\n")  
-        try:
+def start_chatbot_with_cv(cv_id, question):
+    try:
+        cv_text = query_cv_by_id(cv_id)
+        if cv_text:
+            print(f"Starting the chatbot with the selected CV...")  
+            
+            # Fetch the CV from Pinecone
             fetch_response = pinecone_index.fetch(ids=[cv_id], namespace=namespace)
- 
             if 'vectors' in fetch_response and cv_id in fetch_response['vectors']:
                 cv_metadata = fetch_response['vectors'][cv_id]['metadata']
                 cv_embedding = fetch_response['vectors'][cv_id]['values']  
@@ -171,7 +172,6 @@ def start_chatbot_with_cv(cv_id):
             raise HTTPException(status_code=404, detail="CV not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 # def normalize_string(s):
 #     return s.replace('_', ' ').lower()
