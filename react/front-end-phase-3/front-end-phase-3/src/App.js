@@ -12,11 +12,11 @@ const App = () => {
   const handleShowJobDescription = () => {
     // Simulated CV results
     setCvResults([
-      { id: 1, title: 'CV1' },
-      { id: 2, title: 'CV2' },
-      { id: 3, title: 'CV3' },
-      { id: 4, title: 'CV4' },
-      { id: 5, title: 'CV5' },
+      { id: 1, title: 'Candidate 1' },
+      { id: 2, title: 'Candidate 2' },
+      { id: 3, title: 'Candidate 3' },
+      { id: 4, title: 'Candidate 4' },
+      { id: 5, title: 'Candidate 5' },
     ]);
     setShowChat(false); // Reset chat visibility when new CVs are loaded
   };
@@ -38,7 +38,7 @@ const App = () => {
 
   return (
     <div className="App"> 
-      <h1>CVBot</h1>
+      <h1>CV Analysis Chatbot - Phase 3</h1>
 
       {/* Job Description Section */}
       <div>
@@ -67,7 +67,7 @@ const App = () => {
                   setCurrentCv(cv.title);
                 }}
               >
-                Ask Question
+                Ask more info...
               </button>
             </div>
           ))}
