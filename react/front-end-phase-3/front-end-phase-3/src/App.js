@@ -1,23 +1,32 @@
-import React, { useState } from 'react';
-import './App.css';
+import React, { useState } from "react";
+import "./App.css";
 
 const App = () => {
-  const [jobDescription, setJobDescription] = useState('');
+  const [jobDescription, setJobDescription] = useState("");
   const [cvResults, setCvResults] = useState([]);
   const [messages, setMessages] = useState([]);
   const [showChat, setShowChat] = useState(false);
   const [currentCv, setCurrentCv] = useState(null);
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState("");
 
   const handleShowJobDescription = () => {
     setCvResults([
-      { id: 1, title: 'CV1' },
-      { id: 2, title: 'CV2' },
-      { id: 3, title: 'CV3' },
-      { id: 4, title: 'CV4' },
-      { id: 5, title: 'CV5' },
+      { id: 1, title: "CV1" },
+      { id: 2, title: "CV2" },
+      { id: 3, title: "CV3" },
+      { id: 4, title: "CV4" },
+      { id: 5, title: "CV5" },
     ]);
     setShowChat(false);
+  };
+
+  const clearDescription = () => {
+    setJobDescription("");
+    setCvResults([]);
+    setMessages([]);
+    setShowChat(false);
+    setCurrentCv(null);
+    setPrompt("");
   };
 
   const handleSendMessage = () => {
@@ -30,7 +39,7 @@ const App = () => {
     };
 
     setMessages((prevMessages) => [...prevMessages, userMessage, botResponse]);
-    setPrompt('');
+    setPrompt("");
   };
 
   const clearChat = () => setMessages([]);
@@ -46,37 +55,45 @@ const App = () => {
       <h1>CVBot</h1>
 
       {/* Job Description Input */}
-      <div>
+      <div className="job-description-container">
         <h3>Enter Job Description:</h3>
         <textarea
           placeholder="Enter job description here..."
           value={jobDescription}
           onChange={(e) => setJobDescription(e.target.value)}
         />
-        <button onClick={handleShowJobDescription}>Show Job Description</button>
+        <div>
+          <button onClick={handleShowJobDescription}>Submit Description</button>
+          <button onClick={clearDescription} className="clear-btn">
+            Clear Description
+          </button>
+        </div>
       </div>
 
       {/* CV Results */}
       {cvResults.length > 0 && (
-        <div>
-          <h3>CV Matching Results:</h3>
-          {cvResults.map((cv) => (
-            <div key={cv.id} className="cv-row">
-              <span>{cv.title}</span>
-              <button onClick={() => alert(`Displaying ${cv.title} details`)}>
+        <div className="cv-matching-container">
+        <h3>CV Matching Results:</h3>
+        {cvResults.map((cv) => (
+          <div key={cv.id} className="cv-row">
+            <span>{cv.title}</span>
+            <div className="cv-buttons">
+              <button
+                onClick={() => alert(`Displaying ${cv.title} details`)}
+                className="show-cv-btn"
+              >
                 Show CV
               </button>
               <button
-                onClick={() => {
-                  setShowChat(true);
-                  setCurrentCv(cv.title);
-                }}
+                onClick={() => alert(`Asking a question about ${cv.title}`)}
+                className="ask-question-btn"
               >
                 Ask Question
               </button>
             </div>
-          ))}
-        </div>
+          </div>
+        ))}
+      </div>
       )}
 
       {/* Chat Popup */}
@@ -89,8 +106,11 @@ const App = () => {
             {/* Chat Messages */}
             <div className="chat-messages">
               {messages.map((msg, index) => (
-                <div key={index} className={msg.isUser ? 'user-message' : 'bot-message'}>
-                  {msg.isUser ? '🧑' : '🤖'} {msg.text}
+                <div
+                  key={index}
+                  className={msg.isUser ? "user-message" : "bot-message"}
+                >
+                  {msg.isUser ? "🧑" : "🤖"} {msg.text}
                 </div>
               ))}
             </div>
