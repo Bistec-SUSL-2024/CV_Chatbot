@@ -44,8 +44,25 @@ def refine_job_description(raw_description):
     Refine the input job description by adding helpful structure and guidance.
     """
     refined_prompt = f"""
-    Based on the job description provided:
+    Refine the following job description to improve specificity, highlight key responsibilities, and ensure alignment with required skills and experience. 
+    Additionally, exclude any candidates who do not meet the mandatory requirements specified in the description.
     "{raw_description.strip()}"
+
+    Examples:
+    Input: "We are looking for a project manager with experience in leading teams and managing deadlines."
+    Output: "Seeking an experienced Project Manager to lead cross-functional teams, manage timelines, and ensure project delivery. 
+    Requirements: 5+ years of experience in Agile/Scrum methodologies, strong leadership skills, and a PMP certification (preferred)."
+
+    Input: "We are looking for a data scientist with knowledge of Python and machine learning."
+    Output: "Hiring a Data Scientist with 3+ years of experience in Python, machine learning algorithms, and data preprocessing. 
+    Must have expertise in frameworks such as TensorFlow or PyTorch. Preferred: Experience in cloud-based ML solutions (AWS or Azure). 
+    Candidates without Python and ML experience will not be considered."
+
+    Input: "We need a software developer."
+    Output: "Looking for a Software Developer with expertise in full-stack development. 
+    Must have 3+ years of experience with JavaScript, React, Node.js, and familiarity with database systems (SQL/NoSQL). 
+    Responsibilities include building scalable applications and collaborating with product teams.PMP certification or equivalent is mandatory. 
+    Candidates without leadership experience or certifications will not be considered."
 
     Here's how to improve it:
     1. Mention specific skills required (e.g., Python, data analysis, leadership, etc.).
@@ -105,26 +122,60 @@ def rank_cvs_by_description(job_description):
         print("Error: Failed to generate embedding for the job description.")
         return []
     
-    query_results = pinecone_index.query(
-        vector=query_embedding,
-        top_k=5,
-        include_metadata=True,
-        namespace=namespace
-    )
+    try:
+        query_results = pinecone_index.query(
+            vector=query_embedding,
+            top_k=5,
+            include_metadata=True,
+            namespace=namespace
+        )
+    except Exception as e:
+        print(f"Error querying Pinecone: {e}")
+        return []
     
+    mandatory_keywords = extract_mandatory_keywords(refined_description)
+    print(f"Mandatory Keywords: {mandatory_keywords}")
+
     ranked_cvs = []
     for match in query_results['matches']:
-        cv_id = match['id']
-        score = match['score']
-        ranked_cvs.append({
-            "cv_id": cv_id,
-            "score": score
-        })
+        metadata = match['metadata']
+        cv_text = metadata.get("text", "").lower()
+        if all(keyword.lower() in cv_text for keyword in mandatory_keywords):
+            cv_id = match['id']
+            score = match['score']
+            ranked_cvs.append({
+                "cv_id": cv_id,
+                "score": score,    
+            })
 
     ranked_cvs.sort(key=lambda x: x['score'], reverse=True)
     
     print(f"Found {len(ranked_cvs)} CVs for ranking.")  
     return ranked_cvs
+
+#----------------------------------------Mandatory Keywords Function-------------------------------------------------
+
+def extract_mandatory_keywords(refined_description):
+    """
+    Extract mandatory requirements from the refined job description.
+    For simplicity, we assume that requirements follow phrases like 'must have', 'required', etc.
+    """
+    mandatory_keywords = []
+    lines = refined_description.splitlines()
+
+    for line in lines:
+        # Focus on lines with phrases like "must have" or "required"
+        if any(phrase in line.lower() for phrase in ["must have", "required", "mandatory"]):
+            # Extract key phrases (skills, certifications, etc.)
+            phrases = re.findall(r"[A-Za-z0-9+.\- ]+", line)
+            mandatory_keywords.extend(phrases)
+    
+    # Deduplicate and filter out generic terms
+    filtered_keywords = [kw.strip().lower() for kw in set(mandatory_keywords)]
+    ignore_words = {"the", "and", "or", "with", "in", "to", "of", "is", "as", "e.g.", "include"}
+    final_keywords = [kw for kw in filtered_keywords if kw not in ignore_words and len(kw) > 1]
+    
+    return final_keywords
 
 #-------------------------------------------------CV Selection Function-----------------------------------------------------------
 
@@ -224,7 +275,7 @@ def show_cv(cv_id):
 
 if __name__ == "__main__":
     job_description = """I have a job vacancy, that needs skills in Azure Data Engineering tools.
-    If the person has Msc, it will be a plus point.Experience at least 5 year."""
+    Experience required least 5 years."""
 
     ranked_cvs = rank_cvs_by_description(job_description)
     
