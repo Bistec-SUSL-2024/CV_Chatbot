@@ -9,7 +9,8 @@ const App = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [candidates, setCandidates] = useState([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [selectedCandidate, setSelectedCandidate] = useState(null);
+  const [selectedCandidateId, setSelectedCandidateId] = useState(null); // Track the selected candidate's ID
+  const [isJobSubmitted, setIsJobSubmitted] = useState(false); // Track if a job description was submitted
 
   const handleJobSubmit = (description) => {
     setJobDescription(description);
@@ -20,31 +21,35 @@ const App = () => {
       { id: 4, title: "Candidate 4" },
       { id: 5, title: "Candidate 5" },
     ]);
+    setIsJobSubmitted(true); // Mark job submission as true
   };
 
   const handleShowCV = (candidate) => {
+    setSelectedCandidateId(candidate.id); // Highlight the candidate
     alert(`Displaying CV for ${candidate.title}`);
   };
 
   const handleShowChat = (candidate) => {
-    setSelectedCandidate(candidate);
+    setSelectedCandidateId(candidate.id); // Highlight the candidate
     setIsChatOpen(true);
   };
 
   const handleCloseChat = () => {
     setIsChatOpen(false);
-    setSelectedCandidate(null);
+    setSelectedCandidateId(null); // Reset the highlight when closing the chat
   };
 
   const handleClearDescription = () => {
     setJobDescription("");
     setCandidates([]);
+    setSelectedCandidateId(null); // Clear the selected candidate
+    setIsJobSubmitted(false); // Reset the job submission flag
   };
 
   return (
     <div
       className="App flex flex-col min-h-screen"
-      style={{ backgroundColor: "#F3FBFF" }}
+      style={{ backgroundColor: "#e6f2f9" }}
     >
       <Header />
 
@@ -57,16 +62,24 @@ const App = () => {
           handleClearDescription={handleClearDescription}
         />
 
-        {candidates.length > 0 && (
-          <CandidatesList
-            candidates={candidates}
-            onShowCV={handleShowCV} // Pass handler for "Show CV"
-            onChat={handleShowChat} // Pass handler for "Ask More Info"
-          />
+        {isJobSubmitted && candidates.length === 0 ? (
+          <p className="text-center text-gray-500 mt-4">No candidates available.</p>
+        ) : (
+          candidates.length > 0 && (
+            <CandidatesList
+              candidates={candidates}
+              selectedCandidateId={selectedCandidateId}
+              onShowCV={handleShowCV}
+              onChat={handleShowChat}
+            />
+          )
         )}
 
         {isChatOpen && (
-          <ChatPopup candidate={selectedCandidate} onClose={handleCloseChat} />
+          <ChatPopup
+            candidate={candidates.find((c) => c.id === selectedCandidateId)}
+            onClose={handleCloseChat}
+          />
         )}
       </div>
 
