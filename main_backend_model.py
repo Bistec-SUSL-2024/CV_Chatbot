@@ -8,6 +8,7 @@ from llama_index.core.schema import Node, Document
 from pinecone import Pinecone
 from fuzzywuzzy import process
 from fastapi import HTTPException
+
 import re
 
 
@@ -38,81 +39,80 @@ def generate_embeddings(text):
     except Exception as e:
         print(f"Error generating embeddings: {e}")
         return None
+    
 
-def refine_job_description(raw_description):
+#-------------------------------------------------Refine Prompt Function------------------------------------------------
+
+def refine_prompt(job_description):
     """
-    Refine the input job description by adding helpful structure and guidance.
+    Refine the job description based on examples and instructions.
     """
-    refined_prompt = f"""
-    Refine the following job description to improve specificity, highlight key responsibilities, and ensure alignment with required skills and experience. 
-    Additionally, exclude any candidates who do not meet the mandatory requirements specified in the description.
-    "{raw_description.strip()}"
+    examples = [
+        {
+            "job_description": "We need a Software Engineer with 3+ years of experience in Python and Django. Must have knowledge of REST APIs and familiarity with PostgreSQL. Candidates without these skills will not be considered.",
+            "mandatory_keywords": ['software engineer', '3+ years', 'python', 'django', 'rest apis', 'postgresql']
+        },
+        {
+            "job_description": "Seeking a Data Scientist with expertise in machine learning algorithms, 5+ years of experience, and proficiency in Python, TensorFlow, and PyTorch. Preferred experience with AWS or GCP.",
+            "mandatory_keywords": ['data scientist', 'machine learning algorithms', '5+ years', 'python', 'tensorflow', 'pytorch', 'aws', 'gcp']
+        },
+        {
+            "job_description": "Looking for a Project Manager with PMP certification and 7+ years of experience leading cross-functional teams. Expertise in Agile methodologies is mandatory.",
+            "mandatory_keywords": ['project manager', 'pmp certification', '7+ years', 'cross-functional teams', 'agile methodologies']
+        }
+    ]
 
-    Examples:
-    Input: "We are looking for a project manager with experience in leading teams and managing deadlines."
-    Output: "Seeking an experienced Project Manager to lead cross-functional teams, manage timelines, and ensure project delivery. 
-    Requirements: 5+ years of experience in Agile/Scrum methodologies, strong leadership skills, and a PMP certification (preferred)."
+    instructions = """
+            Refine the following job description to:
+            1. Improve specificity by highlighting key responsibilities.
+            2. Ensure alignment with required skills and experience.
+            3. Extract mandatory requirements and exclude candidates who do not meet them.
 
-    Input: "We are looking for a data scientist with knowledge of Python and machine learning."
-    Output: "Hiring a Data Scientist with 3+ years of experience in Python, machine learning algorithms, and data preprocessing. 
-    Must have expertise in frameworks such as TensorFlow or PyTorch. Preferred: Experience in cloud-based ML solutions (AWS or Azure). 
-    Candidates without Python and ML experience will not be considered."
+            Mandatory Keywords to Extract:
+            - Job Role
+            - Years of Experience
+            - Core Technologies or Skills
+            - Certifications (if any)
+        """
 
-    Input: "We need a software developer."
-    Output: "Looking for a Software Developer with expertise in full-stack development. 
-    Must have 3+ years of experience with JavaScript, React, Node.js, and familiarity with database systems (SQL/NoSQL). 
-    Responsibilities include building scalable applications and collaborating with product teams.PMP certification or equivalent is mandatory. 
-    Candidates without leadership experience or certifications will not be considered."
+    # Create the prompt by combining examples, instructions, and the given job description
+    prompt = "Based on the following examples and instructions, refine the given job description:\n\n"
 
-    Here's how to improve it:
-    1. Mention specific skills required (e.g., Python, data analysis, leadership, etc.).
-    2. Specify years of experience and any certifications (e.g., PMP, CPA).
-    3. Outline the primary responsibilities (e.g., manage a team, oversee budgets).
-    4. Highlight soft skills (e.g., communication, problem-solving).
+    # Add examples
+    for example in examples:
+        prompt += f"Example Job Description: {example['job_description']}\n"
+        prompt += f"Mandatory Keywords: {', '.join(example['mandatory_keywords'])}\n\n"
 
-    Ensure the job description includes these details for better matching.
-    """
-    return refined_prompt
+    # Add instructions
+    prompt += f"Instructions:\n{instructions}\n"
+
+    # Add the job description to refine
+    prompt += f"Job Description to Refine:\n{job_description}\n\n"
+    prompt += "Refined Job Description:"
+
+    # Use the OpenAI API or your model (e.g., LLaMA) for text generation
+    print("Generating refined job description using the LLM...")
+    try:
+        llm=OpenAI()  # Replace `YourLLM()` with your LLaMA instance
+        refined_description = llm.predict(prompt)
+        return refined_description.strip()
+    except Exception as e:
+        print(f"Error generating refined job description: {e}")
+        return None
+
 
 #-------------------------------------------------Rank CV Function------------------------------------------------
 
-# def rank_cvs_by_description(job_description):
-#     print("Ranking CVs based on the job description...") 
-    
-#     query_embedding = generate_embeddings(job_description)
-    
-    
-#     if query_embedding is None:
-#         print("Error: Failed to generate embedding for the job description.")
-#         return []
-    
-#     query_results = pinecone_index.query(
-#         vector=query_embedding,
-#         top_k=5,
-#         include_metadata=True,
-#         namespace=namespace
-#     )
-    
-#     ranked_cvs = []
-#     for match in query_results['matches']:
-#         cv_id = match['id']
-#         score = match['score']
-#         ranked_cvs.append({
-#             "cv_id": cv_id,
-#             "score": score
-#         })
-
-#     ranked_cvs.sort(key=lambda x: x['score'], reverse=True)
-    
-#     print(f"Found {len(ranked_cvs)} CVs for ranking.")  
-#     return ranked_cvs
-
 def rank_cvs_by_description(job_description):
-    """Rank CVs based on the provided job description."""
+    """Rank CVs based on the provided job description."""  
     print("Ranking CVs based on the job description...") 
     
-    # Refine the job description
-    refined_description = refine_job_description(job_description)
+    # Refine the job description using the new refine_prompt function
+    refined_description = refine_prompt(job_description)
+    if not refined_description:
+        print("Error: Failed to refine the job description.")
+        return []
+
     print("Refined Job Description:")
     print(refined_description)
     
@@ -152,6 +152,7 @@ def rank_cvs_by_description(job_description):
     
     print(f"Found {len(ranked_cvs)} CVs for ranking.")  
     return ranked_cvs
+
 
 #----------------------------------------Mandatory Keywords Function-------------------------------------------------
 
