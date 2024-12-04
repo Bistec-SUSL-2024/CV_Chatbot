@@ -1,21 +1,18 @@
 import React, { useState } from "react";
 import JobDescriptionInput from "./components/JobDescriptionInput";
 import CandidatesList from "./components/CandidatesList";
-import Header from "./components/Header";
 import ChatPopup from "./components/ChatPopup";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 const App = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [candidates, setCandidates] = useState([]);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [selectedCandidate, setSelectedCandidate] = useState(null); // Track the candidate for chat
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
 
-  const handleSubmitDescription = () => {
-    if (!jobDescription.trim()) {
-      alert("Please enter a job description before submitting.");
-      return;
-    }
-
+  const handleJobSubmit = (description) => {
+    setJobDescription(description);
     setCandidates([
       { id: 1, title: "Candidate 1" },
       { id: 2, title: "Candidate 2" },
@@ -23,42 +20,57 @@ const App = () => {
       { id: 4, title: "Candidate 4" },
       { id: 5, title: "Candidate 5" },
     ]);
-
-    setIsSubmitted(true);
   };
 
-  const handleChat = (candidate) => {
+  const handleShowCV = (candidate) => {
+    alert(`Displaying CV for ${candidate.title}`);
+  };
+
+  const handleShowChat = (candidate) => {
     setSelectedCandidate(candidate);
+    setIsChatOpen(true);
   };
 
-  const closeChat = () => {
+  const handleCloseChat = () => {
+    setIsChatOpen(false);
     setSelectedCandidate(null);
   };
 
+  const handleClearDescription = () => {
+    setJobDescription("");
+    setCandidates([]);
+  };
+
   return (
-    <div className="flex flex-col h-screen">
+    <div
+      className="App flex flex-col min-h-screen"
+      style={{ backgroundColor: "#F3FBFF" }}
+    >
       <Header />
-      <main className="flex flex-1">
-        <div className="w-full p-4">
-          <JobDescriptionInput
-            setJobDescription={setJobDescription}
-            onSubmit={handleSubmitDescription}
+
+      <div className="content flex-1 p-4">
+        <JobDescriptionInput
+          onSubmit={handleJobSubmit}
+          setJobDescription={setJobDescription}
+          setCandidates={setCandidates}
+          jobDescription={jobDescription}
+          handleClearDescription={handleClearDescription}
+        />
+
+        {candidates.length > 0 && (
+          <CandidatesList
+            candidates={candidates}
+            onShowCV={handleShowCV} // Pass handler for "Show CV"
+            onChat={handleShowChat} // Pass handler for "Ask More Info"
           />
+        )}
 
-          {isSubmitted && candidates.length > 0 && (
-            <CandidatesList
-              candidates={candidates}
-              onShowCV={(candidate) => alert(`Showing CV for ${candidate.title}`)}
-              onChat={handleChat} // Trigger chat popup
-            />
-          )}
-        </div>
-      </main>
+        {isChatOpen && (
+          <ChatPopup candidate={selectedCandidate} onClose={handleCloseChat} />
+        )}
+      </div>
 
-      {/* ChatPopup renders conditionally */}
-      {selectedCandidate && (
-        <ChatPopup candidate={selectedCandidate} onClose={closeChat} />
-      )}
+      <Footer />
     </div>
   );
 };
