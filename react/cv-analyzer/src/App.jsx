@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import JobDescriptionInput from "./components/JobDescriptionInput";
 import CandidatesList from "./components/CandidatesList";
+import Header from "./components/Header"; // Import the Header component
 
 const App = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [candidates, setCandidates] = useState([]);
-  const [isSubmitted, setIsSubmitted] = useState(false); // Tracks submission status
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleSubmitDescription = () => {
     if (!jobDescription.trim()) {
@@ -16,8 +17,10 @@ const App = () => {
       { id: 1, title: "Candidate 1" },
       { id: 2, title: "Candidate 2" },
       { id: 3, title: "Candidate 3" },
+      { id: 4, title: "Candidate 4" },
+      { id: 5, title: "Candidate 5" },
     ]);
-    setIsSubmitted(true); // Mark as submitted
+    setIsSubmitted(true);
   };
 
   const openChatPopup = (candidate) => {
@@ -125,22 +128,23 @@ const App = () => {
   };
 
   return (
-    <div className="flex h-screen">
-      <div className="w-full p-4">
-        <JobDescriptionInput
-          setJobDescription={setJobDescription}
-          onSubmit={handleSubmitDescription}
-        />
-
-        {/* Show CandidatesList only if the job description is submitted */}
-        {isSubmitted && candidates.length > 0 && (
-          <CandidatesList
-            candidates={candidates}
-            onShowCV={(candidate) => alert(`Showing CV for ${candidate.title}`)}
-            onChat={openChatPopup} // Pass the pop-up handler
+    <div className="flex flex-col h-screen">
+      <Header /> {/* Call the Header component */}
+      <main className="flex flex-1">
+        <div className="w-full p-4">
+          <JobDescriptionInput
+            setJobDescription={setJobDescription}
+            onSubmit={handleSubmitDescription}
           />
-        )}
-      </div>
+          {isSubmitted && candidates.length > 0 && (
+            <CandidatesList
+              candidates={candidates}
+              onShowCV={(candidate) => alert(`Showing CV for ${candidate.title}`)}
+              onChat={openChatPopup}
+            />
+          )}
+        </div>
+      </main>
     </div>
   );
 };
