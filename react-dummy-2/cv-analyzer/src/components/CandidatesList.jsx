@@ -25,7 +25,7 @@ const CandidatesList = ({ candidates, selectedCandidateId, onShowCV, onChat }) =
                 Show CV
               </button>
               <button
-                className="bg-green-300 px-4 py-2 rounded hover:bg-green-600"
+                className="bg-orange-300 px-4 py-2 rounded hover:bg-orange-600"
                 onClick={() => onChat(candidate)}
               >
                 Ask More Info

@@ -107,8 +107,8 @@ const ChatPopup = ({ candidate, onClose }) => {
                   key={index}
                   className={`mb-2 p-2 rounded ${
                     message.sender === "user"
-                      ? "bg-blue-100 text-left"
-                      : "bg-gray-200 text-right"
+                      ? "bg-blue-600 text-left"
+                      : "bg-gray-700 text-right"
                   }`}
                 >
                   {message.sender === "user" ? `You: ${message.text}` : message.text}
