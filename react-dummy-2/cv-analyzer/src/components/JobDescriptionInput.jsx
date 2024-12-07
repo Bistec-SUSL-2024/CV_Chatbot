@@ -23,14 +23,14 @@ const JobDescriptionInput = ({ onSubmit, setJobDescription, setCandidates, jobDe
       <div className="actions mt-4 flex justify-end space-x-4"> {/* Add justify-end to align to the right */}
         <button
           onClick={handleClearDescription} // Clear both jobDescription and candidates
-          className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700 focus:outline-none"
+          className="px-4 py-2 bg-gray-400 text-black rounded-md hover:bg-gray-700  hover:text-white focus:outline-black font-medium text-shadow-white" 
         >
           Clear Description
         </button>
 
         <button
           onClick={() => onSubmit(jobDescription)} // Pass the job description to submit
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-800 focus:outline-none"
+          className="px-4 py-2 bg-blue-400 text-black rounded-md hover:bg-blue-800  hover:text-white focus:outline-black font-medium "
         >
           Submit Description
         </button>
