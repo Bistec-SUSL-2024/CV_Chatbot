@@ -118,14 +118,21 @@ const ChatPopup = ({ candidate, onClose }) => {
                   key={index}
                   className={`mb-2 p-2 rounded ${
                     message.sender === "user"
-                      ? "bg-purple-200 text-left text-black"
-                      : "bg-gray-200 text-right text-black"
+                      ? "bg-purple-200 text-left text-black  hover:text-white hover:bg-purple-600"
+                      : "bg-gray-200 text-right text-black  hover:text-white  hover:bg-gray-600"
                   }`}
                 >
                   <p>
-                    {message.sender === "user"
-                      ? `You: ${message.text}`
-                      : message.text}
+                  {message.sender === "user" ? (
+    <>
+      <span className="font-bold">You:  </span> {message.text}
+    </>
+  ) : (
+    <>
+      <span className="font-bold">Response:  </span> {message.text}
+    </>
+  )}
+
                   </p>
                   {/* Add options only for bot responses */}
                   {message.sender === "bot" && (
@@ -152,7 +159,7 @@ const ChatPopup = ({ candidate, onClose }) => {
                         <MdOutlineContentCopy />
                       </button>
                       <button
-                        className="text-black hover:text-purple-500 focus:outline-none"
+                        className="text-black hover:text-blue-600 focus:outline-none"
                         title="Share"
                         onClick={() =>
                           alert("Share functionality is not implemented yet!")
@@ -189,9 +196,9 @@ const ChatPopup = ({ candidate, onClose }) => {
             )}
             <button
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="p-2 bg-gray-200 rounded-l-lg hover:bg-gray-400"
+              className="p-2 bg-gray-200 rounded-l-lg hover:bg-gray-600 hover:text-white"
             >
-              <FaRegSmileWink />
+              <FaRegSmileWink size={25} />
             </button>
             <input
               type="file"
@@ -201,20 +208,20 @@ const ChatPopup = ({ candidate, onClose }) => {
             />
             <label
               htmlFor="file-input"
-              className="cursor-pointer bg-gray-200 p-2 hover:bg-gray-400"
+              className="cursor-pointer bg-gray-200 p-2 hover:bg-gray-600 hover:text-white"
             >
-              <MdFileUpload />
+              <MdFileUpload size={25} />
             </label>
             <input
               type="text"
               value={userMessage}
               onChange={(e) => setUserMessage(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 border p-2 focus:outline-none text-black bg-white dark:text-black dark:bg-gray-50"
+              className="flex-1 border p-2 focus:outline-none text-black bg-white dark:text-black dark:bg-gray-50 "
             />
             <button
               onClick={handleSend}
-              className="bg-blue-500 text-black px-4 py-2 rounded-r-lg hover:bg-blue-600"
+              className="bg-green-500 text-black px-4 py-2 rounded-r-lg hover:bg-green-800  hover:text-white"
             >
               Send
             </button>
