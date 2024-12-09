@@ -47,10 +47,7 @@ const App = () => {
   };
 
   return (
-    <div
-      className="App flex flex-col min-h-screen"
-      style={{ backgroundColor: "#e6f2f9" }}
-    >
+    <div className="App flex flex-col min-h-screen bg-lightBg dark:bg-darkBg text-lightText dark:text-darkText">
       <Header />
 
       <div className="content flex-1 p-4">
@@ -63,7 +60,9 @@ const App = () => {
         />
 
         {isJobSubmitted && candidates.length === 0 ? (
-          <p className="text-center text-gray-500 mt-4">No candidates available.</p>
+          <p className="text-center text-gray-500 dark:text-gray-300 mt-4">
+            No candidates available.
+          </p>
         ) : (
           candidates.length > 0 && (
             <CandidatesList
