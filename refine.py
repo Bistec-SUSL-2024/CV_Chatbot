@@ -51,7 +51,7 @@ def retrieve_examples_and_instructions(user_input):
         # Query Pinecone for relevant examples and instructions
         query_results = pinecone_index.query(
             vector=user_embedding,
-            top_k=3,  # Retrieve top 3 matches
+            top_k=1,  # Retrieve top 3 matches
             include_metadata=True,
             namespace=namespace
         )
@@ -100,9 +100,10 @@ def refine_user_prompt_with_llm(combined_prompt):
         # Initialize OpenAI model with necessary parameters
         llm_instance = OpenAI(temperature=0)  # Adjust parameters as needed
         
-        # Check if llm_instance is created properly
-        print(f"LLM Instance Type: {type(llm_instance)}")  # Debug print
-        
+        # Ensure llm_instance is created properly
+        if not isinstance(llm_instance, OpenAI):
+            raise TypeError("Expected an instance of OpenAI")
+
         # Initialize LLMPredictor with the LLM instance
         llm_predictor = LLMPredictor(llm=llm_instance)
 
@@ -132,8 +133,8 @@ if __name__ == "__main__":
         combined_prompt = generate_combined_prompt(user_input, retrieved_data)
 
         # Debugging: Print out the combined prompt before sending it to LLM
-        print("Combined Prompt:")
-        print(combined_prompt)
+        # print("Combined Prompt:")
+        # print(combined_prompt)
         
         print(f"Type of combined_prompt: {type(combined_prompt)}")
 
