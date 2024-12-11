@@ -47,7 +47,7 @@ const JobDescriptionInput = ({
             className="cursor-pointer flex items-center space-x-2 text-gray-600 hover:text-blue-600" 
           >
             <MdFileUpload size={30} />
-            <span>Upload File</span>
+            <span>Upload Specific CV</span>
           </label>
           <input
             id="file-upload"
