@@ -56,8 +56,10 @@ def retrieve_examples_and_instructions(user_input):
             namespace=namespace
         )
 
+        print(query_results)
         # print(f"Query results: {query_results}")  # Debug print
         retrieved_data = []
+        instructions = None
         for match in query_results['matches']:
             metadata = match.get('metadata', {})
             job_description = metadata.get('job_description', '')
@@ -68,8 +70,10 @@ def retrieve_examples_and_instructions(user_input):
                 'job_description': job_description,
                 'mandatory_keywords': mandatory_keywords
             })
-
+ 
         return retrieved_data
+    
+
     except Exception as e:
         print(f"Error retrieving data from Pinecone: {e}")
         return []
