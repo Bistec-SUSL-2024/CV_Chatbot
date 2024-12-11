@@ -67,7 +67,11 @@ const ChatPopup = ({ candidate, onClose }) => {
       <div
         className={`${
           isMaximized
+<<<<<<< HEAD
             ? "w-full h-full bg-gray-900 p-8 rounded-2xl shadow-2xl dark:bg-gray-100 dark:text-black"
+=======
+            ? "w-full h-full bg-gray-900 p-8 rounded-2xl shadow-2xl dark:bg-gray-50 dark:text-black"
+>>>>>>> 4378b25072b51887fef44e0f424a01cf5ec1f752
             : "w-[700px] h-[700px] bg-gray-900 p-4 rounded-2xl shadow-2xl dark:bg-gray-50 dark:text-black"
         } relative flex flex-col`}
       >
