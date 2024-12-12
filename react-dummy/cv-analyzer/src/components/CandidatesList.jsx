@@ -43,6 +43,7 @@ const CandidatesList = ({ candidates, selectedCandidateId, onShowCV, onChat }) =
         </div>
       ))}
     </div>
+    
   );
 };
 
