@@ -18,14 +18,12 @@ PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 
-# Initialize embedding model and Pinecone client
-client = OpenAI(api_key=OPENAI_API_KEY)
 
-# Initialize embedding model and Pinecone client
+client = OpenAI(api_key=OPENAI_API_KEY)
 embed_model = OpenAIEmbedding()
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
-index_name = "cv-markdown-index-3"  
+index_name = "test-db"  
 namespace = ""  
 pinecone_index = pc.Index(index_name)
 
@@ -46,27 +44,25 @@ def retrieve_examples_and_instructions(user_input):
     Retrieve relevant examples and instructions from Pinecone.
     """
     try:
-        # Generate embeddings for the user input
         user_embedding = generate_embeddings(user_input)
 
         if user_embedding is None:
             print("Failed to generate user embedding.")
             return [], ""
 
-        # Query Pinecone for both examples and instructions
         query_results = pinecone_index.query(
             vector=user_embedding,
-            top_k=5,  # Retrieve enough matches for both types
+            top_k=5,  
             include_metadata=True,
             namespace="job_description_examples"
         )
 
         retrieved_data = []
-        instructions = None  # Initialize instructions as None
+        instructions = None  
 
         for match in query_results['matches']:
             metadata = match.get('metadata', {})
-            data_type = metadata.get('type', '')  # Check if it's an example or instruction
+            data_type = metadata.get('type', '') 
 
             if data_type == 'example':
                 job_description = metadata.get('job_description', '')
@@ -76,7 +72,7 @@ def retrieve_examples_and_instructions(user_input):
                     'mandatory_keywords': mandatory_keywords
                 })
             elif data_type == 'instruction':
-                instructions = metadata.get('content', '')  # Retrieve the instruction content
+                instructions = metadata.get('content', '')  
 
         return retrieved_data, instructions
     except Exception as e:
@@ -133,7 +129,7 @@ def refine_user_prompt_with_llm(user_input, examples, instructions):
 #----------------------------------------Function for extract_skills_and_experience From CVS----------------------------------------------------
 
 
-def extract_skills_and_experience(certification_text):
+def extract_skills_and_experience(full_text):
     """
     Extracts skills, experience, and certifications from CVs
     """
@@ -145,16 +141,16 @@ def extract_skills_and_experience(certification_text):
     }
     
     # Extract skills
-    skills_match = re.findall(r'\b(?:Python|JavaScript|SQL|Azure|AWS|React|Django|Data Engineering)\b', certification_text, re.IGNORECASE)
+    skills_match = re.findall(r'\b(?:Python|JavaScript|SQL|Azure|AWS|React|Django|Data Engineering)\b', full_text, re.IGNORECASE)
     extracted_info['skills'] = list(set(skills_match))  
 
     # Extract experience
-    experience_match = re.findall(r'(\d+)\s+years? of experience', certification_text, re.IGNORECASE)
+    experience_match = re.findall(r'(\d+)\s+years? of experience', full_text, re.IGNORECASE)
     if experience_match:
         extracted_info['experience'] = [int(exp) for exp in experience_match]
 
     # Extract certifications
-    certifications_match = re.findall(r'\b(?:Certified|Certification|Certifications)\b.*?[\.,;]', certification_text, re.IGNORECASE)
+    certifications_match = re.findall(r'\b(?:Certified|Certification|Certifications)\b.*?[\.,;]', full_text, re.IGNORECASE)
     extracted_info['certifications'] = certifications_match
 
     # tools_match = re.findall(r'\b(?:Docker|Kubernetes|Terraform|Apache|Spark|Tableau|Power BI|Hadoop)\b', certification_text, re.IGNORECASE)
@@ -268,7 +264,7 @@ def rank_and_validate_cvs(refined_job_description, mandatory_conditions):
 
     query_results = pinecone_index.query(
         vector=query_embedding,
-        top_k=10,  
+        top_k=5,  
         include_metadata=True,
         namespace=namespace
     )
@@ -397,8 +393,8 @@ def show_cv(cv_id):
 
 if __name__ == "__main__":
     
-   user_input_job_description = """I have a job vacancy, that needs skills in Azure Data Engineering tools.
-    Experience required least 5 years"""
+   user_input_job_description = """I have a job vacancy fpr software engineer.
+    Experience required least 3 years"""
    
    examples, instructions = retrieve_examples_and_instructions(user_input_job_description)
 

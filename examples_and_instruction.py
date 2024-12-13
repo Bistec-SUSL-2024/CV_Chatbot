@@ -18,7 +18,7 @@ examples_namespace = "job_description_examples"
 #-----------------------------------------------Create Pinecone Index-----------------------------------------------------
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
-index_name = "cv-markdown-index-3"
+index_name = "test-db"
 namespace = examples_namespace
 embedding_dimension = 1536
 
