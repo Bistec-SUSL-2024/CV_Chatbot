@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import JobDescriptionInput from "./components/JobDescriptionInput";
 import CandidatesList from "./components/CandidatesList";
+import Header from "./components/Header"; // Import the Header component
 
 const App = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [candidates, setCandidates] = useState([]);
-  const [isSubmitted, setIsSubmitted] = useState(false); // Tracks submission status
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const handleSubmitDescription = () => {
     if (!jobDescription.trim()) {
@@ -16,8 +17,10 @@ const App = () => {
       { id: 1, title: "Candidate 1" },
       { id: 2, title: "Candidate 2" },
       { id: 3, title: "Candidate 3" },
+      { id: 4, title: "Candidate 4" },
+      { id: 5, title: "Candidate 5" },
     ]);
-    setIsSubmitted(true); // Mark as submitted
+    setIsSubmitted(true);
   };
 
   const openChatPopup = (candidate) => {
@@ -126,26 +129,18 @@ const App = () => {
 
   return (
     <div className="flex flex-col h-screen">
-      {/* Colorful Header */}
-      <header className="w-full bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-white py-4 shadow-md">
-        <h1 className="text-center text-3xl font-bold uppercase tracking-wider">
-          CV Analysis Chatbot - Phase 3
-        </h1>
-      </header>
-
+      <Header /> {/* Call the Header component */}
       <main className="flex flex-1">
         <div className="w-full p-4">
           <JobDescriptionInput
             setJobDescription={setJobDescription}
             onSubmit={handleSubmitDescription}
           />
-
-          {/* Show CandidatesList only if the job description is submitted */}
           {isSubmitted && candidates.length > 0 && (
             <CandidatesList
               candidates={candidates}
               onShowCV={(candidate) => alert(`Showing CV for ${candidate.title}`)}
-              onChat={openChatPopup} // Pass the pop-up handler
+              onChat={openChatPopup}
             />
           )}
         </div>
