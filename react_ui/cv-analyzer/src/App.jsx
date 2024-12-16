@@ -53,7 +53,7 @@ const App = () => {
   };
 
   return (
-    <div className="App flex flex-col min-h-screen bg-amber-200 text-lightText dark:text-darkText relative">
+    <div className="App flex flex-col min-h-screen bg-lightBg dark:bg-darkBg text-lightText dark:text-darkText relative">
       {/* Show LoadingSpinner with blurred background */}
       {isLoading && (
         <LoadingSpinner
@@ -64,13 +64,7 @@ const App = () => {
       )}
 
       {/* Disable interactions and blur content when loading */}
-      <div
-        className={
-          isLoading
-            ? "pointer-events-none blur-md flex flex-col min-h-screen"
-            : "flex flex-col min-h-screen"
-        }
-      >
+      <div className={isLoading ? "pointer-events-none blur-md flex flex-col min-h-screen" : "flex flex-col min-h-screen"}>
         <Header />
 
         {/* Main content */}
