@@ -1,10 +1,14 @@
 import React from "react";
 
-const Header = () => {
+const Header = ({ title }) => {
   return (
-    <header className="w-full bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 text-white py-4 shadow-md">
-      <h1 className="text-center text-3xl font-bold uppercase tracking-wider">
-        CV Analysis Chatbot - Phase 3
+    <header
+      aria-label="Application Header"
+      className="w-full py-4 shadow-md"
+      style={{ backgroundColor: "#dcd9ff", fontFamily: "'Inter', sans-serif" }} // Apply Inter font
+    >
+      <h1 className="text-center text-3xl sm:text-2xl md:text-3xl font-bold tracking-normal">
+        {title || "CV Analysis Chatbot Phase-3"}
       </h1>
     </header>
   );
