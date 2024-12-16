@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
 import Picker from "@emoji-mart/react"; // Emoji Picker
 import data from "@emoji-mart/data"; // Emoji data
-import { FaThumbsUp, FaThumbsDown, FaCopy } from "react-icons/fa"; // Icons for like, dislike, and copy
+import { FaShareAlt } from "react-icons/fa";
+import { MdOutlineContentCopy } from "react-icons/md";
+import { BiDislike } from "react-icons/bi";
+import { BiLike } from "react-icons/bi";
+import { FaRegSmileWink } from "react-icons/fa";
 
 const ChatPopup = ({ candidate, onClose }) => {
   const [messages, setMessages] = useState(
@@ -52,22 +56,6 @@ const ChatPopup = ({ candidate, onClose }) => {
     setUserMessage(""); // Clear input field
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setMessages([
-        ...messages,
-        { sender: "user", text: `File uploaded: ${file.name}` },
-      ]);
-    }
-  };
-
-  const handleCopy = (text) => {
-    navigator.clipboard.writeText(text).then(() => {
-      alert("Message copied to clipboard!");
-    });
-  };
-
   return (
     <div
       className={`fixed top-0 left-0 w-full h-full ${
@@ -79,8 +67,8 @@ const ChatPopup = ({ candidate, onClose }) => {
       <div
         className={`${
           isMaximized
-            ? "w-full h-full bg-white"
-            : "w-[500px] h-[600px] bg-gray-900 p-4 rounded-lg shadow-lg dark:bg-gray-50 dark:text-black"
+            ? "w-full h-full bg-gray-900 p-8 rounded-2xl shadow-2xl dark:bg-gray-50 dark:text-black"
+            : "w-[700px] h-[700px] bg-gray-900 p-4 rounded-2xl shadow-2xl dark:bg-gray-50 dark:text-black"
         } relative flex flex-col`}
       >
         {/* Header Section */}
@@ -90,19 +78,19 @@ const ChatPopup = ({ candidate, onClose }) => {
           </h2>
           <div className="flex items-center">
             <button
-              className="text-black p-2"
+              className="text-black p-2 text-2xl"
               onClick={() => setIsMinimized(!isMinimized)}
             >
               {isMinimized ? "-" : "-"} {/* Minimize/Restore icon */}
             </button>
             <button
-              className="text-black p-2"
+              className="text-black p-2 text-xl"
               onClick={() => setIsMaximized(!isMaximized)}
             >
               {isMaximized ? "🗗" : "🗗"} {/* Maximize/Restore icon */}
             </button>
             <button
-              className="text-black font-bold text-lg"
+              className="text-black p-2 font-bold text-2xl"
               onClick={handleClose} // Use handleClose to clear chat and close the popup
             >
               ×
@@ -112,38 +100,61 @@ const ChatPopup = ({ candidate, onClose }) => {
 
         {/* Chat Content */}
         {!isMinimized && (
-          <div className="flex-1 overflow-y-auto mb-16 p-2 border rounded">
+          <div className="flex-1 overflow-y-auto mb-20 p-2 border rounded">
             <div className="space-y-4">
               {messages.map((message, index) => (
-                <div key={index} className="mb-4">
-                  <div
-                    className={`p-2 rounded ${
-                      message.sender === "user"
-                        ? "bg-purple-200 text-left text-black"
-                        : "bg-gray-200 text-right text-black"
-                    }`}
-                  >
-                    {message.sender === "user" ? `You: ${message.text}` : message.text}
-                  </div>
+                <div
+                  key={index}
+                  className={`mb-2 p-2 rounded ${
+                    message.sender === "user"
+                      ? "bg-purple-200 text-left text-black hover:text-white hover:bg-purple-500"
+                      : "bg-gray-200 text-right text-black hover:text-white hover:bg-gray-500"
+                  }`}
+                >
+                  <p>
+                    {message.sender === "user" ? (
+                      <>
+                        <span className="font-bold">You: </span> {message.text}
+                      </>
+                    ) : (
+                      <>
+                        <span className="font-bold">Response: </span>{" "}
+                        {message.text}
+                      </>
+                    )}
+                  </p>
+                  {/* Add options only for bot responses */}
                   {message.sender === "bot" && (
-                    <div className="flex justify-end space-x-2 mt-1">
+                    <div className="flex justify-end items-center space-x-2 mt-2">
                       <button
-                        onClick={() => alert("You liked this response!")}
-                        className="p-1 text-green-500 hover:text-green-700"
+                        className="text-black hover:text-blue-600 focus:outline-none"
+                        title="Like"
                       >
-                        <FaThumbsUp />
+                        <BiLike />
                       </button>
                       <button
-                        onClick={() => alert("You disliked this response!")}
-                        className="p-1 text-red-500 hover:text-red-700"
+                        className="text-black hover:text-red-600 focus:outline-none"
+                        title="Dislike"
                       >
-                        <FaThumbsDown />
+                        <BiDislike />
                       </button>
                       <button
-                        onClick={() => handleCopy(message.text)}
-                        className="p-1 text-blue-500 hover:text-blue-700"
+                        className="text-black hover:text-blue-600 focus:outline-none"
+                        title="Copy"
+                        onClick={() =>
+                          navigator.clipboard.writeText(message.text)
+                        }
                       >
-                        <FaCopy />
+                        <MdOutlineContentCopy />
+                      </button>
+                      <button
+                        className="text-black hover:text-blue-600 focus:outline-none"
+                        title="Share"
+                        onClick={() =>
+                          alert("Share functionality is not implemented yet!")
+                        }
+                      >
+                        <FaShareAlt />
                       </button>
                     </div>
                   )}
@@ -159,10 +170,10 @@ const ChatPopup = ({ candidate, onClose }) => {
 
         {/* Fixed Bottom Input Section */}
         <div
-          className="absolute bottom-0 left-0 w-full p-4 bg-white dark:bg-gray-100 border-t"
+          className="absolute bottom-0 left-0 w-full p-4 bg-white dark:bg-gray-100 border-t rounded-xl"
           style={{ zIndex: 1 }}
         >
-          <div className="flex items-center">
+          <div className="flex items-center space-x-0">
             {showEmojiPicker && (
               <Picker
                 data={data}
@@ -174,32 +185,19 @@ const ChatPopup = ({ candidate, onClose }) => {
             )}
             <button
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="p-2 bg-gray-200 rounded-l-lg hover:bg-gray-400"
+              className="p-2 bg-gray-200 rounded-l-xl hover:bg-gray-600 hover:text-white"
             >
-              😊
+              <FaRegSmileWink size={50} />
             </button>
-            <input
-              type="file"
-              onChange={handleFileUpload}
-              className="hidden"
-              id="file-input"
-            />
-            <label
-              htmlFor="file-input"
-              className="cursor-pointer bg-gray-200 p-2 hover:bg-gray-400"
-            >
-              📎
-            </label>
-            <input
-              type="text"
+            <textarea
               value={userMessage}
               onChange={(e) => setUserMessage(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 border p-2 focus:outline-none text-black bg-white dark:text-black dark:bg-gray-50"
+              className="flex-1 border p-2 focus:outline-none text-black bg-white dark:text-black dark:bg-gray-50 h-16 resize-none"
             />
             <button
               onClick={handleSend}
-              className="bg-blue-500 text-black px-4 py-2 rounded-r-lg hover:bg-blue-600"
+              className="bg-green-500 text-black px-6 py-5 rounded-r-xl hover:bg-green-800 hover:text-white"
             >
               Send
             </button>
