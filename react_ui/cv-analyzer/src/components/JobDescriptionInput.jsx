@@ -1,5 +1,4 @@
 import React from "react";
-import { FaUpload } from "react-icons/fa"; 
 import { MdFileUpload } from "react-icons/md";// Import the upload icon from react-icons
 
 const JobDescriptionInput = ({
