@@ -1,60 +1,60 @@
 import React, { useState } from "react";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
 import JobDescriptionInput from "./components/JobDescriptionInput";
 import CandidatesList from "./components/CandidatesList";
 import ChatPopup from "./components/ChatPopup";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 const App = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const [jobDescription, setJobDescription] = useState("");
   const [candidates, setCandidates] = useState([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedCandidate, setSelectedCandidate] = useState(null);
 
   const handleJobSubmit = (description) => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setCandidates([
-        { id: 1, title: "Candidate 1" },
-        { id: 2, title: "Candidate 2" },
-        { id: 3, title: "Candidate 3" },
-        { id: 4, title: "Candidate 4" },
-        { id: 5, title: "Candidate 5" },
-      ]);
-      setJobDescription(description);
-      setIsLoading(false);
-    }, 1500);
+    setJobDescription(description);
+    setCandidates([
+      { id: 1, title: "Candidate 1" },
+      { id: 2, title: "Candidate 2" },
+      { id: 3, title: "Candidate 3" },
+      { id: 4, title: "Candidate 4" },
+      { id: 5, title: "Candidate 5" },
+    ]);
+  };
+
+  const handleShowChat = (candidate) => {
+    setSelectedCandidate(candidate);
+    setIsChatOpen(true);
+  };
+
+  const handleCloseChat = () => {
+    setIsChatOpen(false);
+    setSelectedCandidate(null);
   };
 
   return (
-    <div className="flex flex-col h-screen">
-      {/* Header */}
+    <div className="App flex flex-col min-h-screen">
       <Header />
-
-      {/* Main Content */}
-      <main className="flex-1 p-4">
-        {/* Job Description Input */}
-        <JobDescriptionInput onSubmit={handleJobSubmit} />
-
-        {/* Show Candidates List if available */}
-        {!isLoading && candidates.length > 0 && (
+      
+      <div className="content flex-1 p-4">
+        <JobDescriptionInput onSubmit={handleJobSubmit} setJobDescription={setJobDescription} />
+        
+        {candidates.length > 0 && (
           <CandidatesList
             candidates={candidates}
-            onViewDetails={(candidate) => console.log(candidate)}
-            onAskInfo={() => setIsChatOpen(true)}
+            onShowChat={handleShowChat}
           />
         )}
-
-        {/* Chat Popup */}
+        
         {isChatOpen && (
-          <ChatPopup
-            onClose={() => setIsChatOpen(false)}
-            jobDescription={jobDescription}
+          <ChatPopup 
+            candidate={selectedCandidate}
+            onClose={handleCloseChat}
           />
         )}
-      </main>
+      </div>
 
-      {/* Footer */}
+      {/* Footer stays at the bottom */}
       <Footer />
     </div>
   );

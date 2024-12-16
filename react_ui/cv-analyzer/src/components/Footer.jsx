@@ -1,13 +1,12 @@
-import Footer from "./components/Footer";
+// Footer.jsx
+import React from "react";
 
-function App() {
+const Footer = () => {
   return (
-    <div className="flex flex-col h-screen">
-      <Header />
-      <main className="flex-1">
-        {/* App content */}
-      </main>
-      <Footer />
-    </div>
+    <footer className="bg-indigo-600 text-white py-4 text-center mt-4">
+      <p>&copy; 2024 CV Analysis Chatbot - Phase 3. All rights reserved.</p>
+    </footer>
   );
-}
+};
+
+export default Footer;

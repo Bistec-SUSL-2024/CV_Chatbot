@@ -1,34 +1,28 @@
 import React, { useState } from "react";
 
-const JobDescriptionInput = ({ setJobDescription, onSubmit }) => {
-  const [description, setDescription] = useState("");
+const JobDescriptionInput = ({ onSubmit, setJobDescription }) => {
+  const [inputValue, setInputValue] = useState("");
+
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
+    setJobDescription(e.target.value); // Update job description in App.jsx
+  };
+
+  const handleSubmit = () => {
+    if (inputValue.trim() !== "") {
+      onSubmit(inputValue);
+    }
+  };
 
   return (
-    <div className="p-4 bg-gray-800 rounded-lg text-white">
-      <h4 className="text-lg mb-2">Input the Job Description</h4>
-      <textarea
-        className="w-full p-2 rounded bg-gray-700"
-        placeholder="Enter job description here..."
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      ></textarea>
-      <div className="flex justify-between mt-2">
-        <button
-          className="bg-red-500 px-4 py-2 rounded"
-          onClick={() => setDescription("")}
-        >
-          Clear
-        </button>
-        <button
-          className="bg-green-500 px-4 py-2 rounded"
-          onClick={() => {
-            setJobDescription(description);
-            onSubmit();
-          }}
-        >
-          Submit
-        </button>
-      </div>
+    <div>
+      <input
+        type="text"
+        placeholder="Enter job description"
+        value={inputValue}
+        onChange={handleInputChange}
+      />
+      <button onClick={handleSubmit}>Submit</button>
     </div>
   );
 };
