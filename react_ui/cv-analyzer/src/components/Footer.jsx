@@ -1,10 +1,15 @@
-// Footer.jsx
 import React from "react";
 
 const Footer = () => {
   return (
-    <footer className="bg-indigo-600 text-white py-4 text-center mt-4">
+    <footer
+      className="#030712 py-4 text-center mt-4 "
+      style={{ backgroundColor: "#dcd9ff" }} // Applied extracted color here
+    >
       <p>&copy; 2024 CV Analysis Chatbot - Phase 3. All rights reserved.</p>
+      <p>
+        Created by <a href="#" className="underline text-blue-600">CIS-FOC</a>
+      </p>
     </footer>
   );
 };
