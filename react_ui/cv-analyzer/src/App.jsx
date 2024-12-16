@@ -13,7 +13,7 @@ const App = () => {
 
   const handleJobSubmit = (description) => {
     setJobDescription(description);
-    setCandidates([
+    setCandidates([  // Simulating candidates after job description submission
       { id: 1, title: "Candidate 1" },
       { id: 2, title: "Candidate 2" },
       { id: 3, title: "Candidate 3" },
@@ -32,12 +32,24 @@ const App = () => {
     setSelectedCandidate(null);
   };
 
+  // Clear description and candidates when clicked
+  const handleClearDescription = () => {
+    setJobDescription("");  // Clears job description state
+    setCandidates([]);      // Clears candidates list
+  };
+
   return (
     <div className="App flex flex-col min-h-screen">
       <Header />
       
       <div className="content flex-1 p-4">
-        <JobDescriptionInput onSubmit={handleJobSubmit} setJobDescription={setJobDescription} />
+        <JobDescriptionInput 
+          onSubmit={handleJobSubmit} 
+          setJobDescription={setJobDescription} 
+          setCandidates={setCandidates}
+          jobDescription={jobDescription}
+          handleClearDescription={handleClearDescription}  // Pass the clear function here
+        />
         
         {candidates.length > 0 && (
           <CandidatesList

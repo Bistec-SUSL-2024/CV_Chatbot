@@ -1,7 +1,7 @@
 const CandidatesList = ({ candidates, onShowCV, onChat }) => {
     return (
-      <div className="bg-gray-800 p-4 rounded-lg text-white">
-        <h4 className="text-lg mb-4">Relevant Candidates</h4>
+      <div className="bg-gray-800 p-4 rounded-lg text-white max-w-2xl mx-auto">
+        <h4 className="text-lg mb-4 text-center">Relevant Candidates</h4>
         {candidates.map((candidate) => (
           <div
             key={candidate.id}
