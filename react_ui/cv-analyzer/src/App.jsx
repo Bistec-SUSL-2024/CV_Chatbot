@@ -21,7 +21,7 @@ const App = () => {
     setMessages((prev) => [
       ...prev,
       { text, isUser: true },
-      { text: Response for "${text}", isUser: false },
+      { text: `Response for "${text}"`, isUser: false },
     ]);
   };
 
@@ -34,7 +34,7 @@ const App = () => {
         />
         <CandidatesList
           candidates={candidates}
-          onShowCV={(candidate) => alert(Showing CV for ${candidate.title})}
+          onShowCV={(candidate) => alert(`Showing CV for ${candidate.title}`)}
           onChat={(candidate) => setCurrentCandidate(candidate)}
         />
       </div>
@@ -51,6 +51,4 @@ const App = () => {
   );
 };
 
-export default App;
-
-/* v1
+export default App;
