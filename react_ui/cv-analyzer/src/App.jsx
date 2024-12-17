@@ -10,51 +10,62 @@ const App = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [candidates, setCandidates] = useState([]);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [selectedCandidateId, setSelectedCandidateId] = useState(null); // Track the selected candidate's ID
-  const [isJobSubmitted, setIsJobSubmitted] = useState(false); // Track if a job description was submitted
-  const [isLoading, setIsLoading] = useState(false); // Track the loading state
+  const [selectedCandidateId, setSelectedCandidateId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleJobSubmit = (description) => {
+  const handleJobSubmit = async (description) => {
     setJobDescription(description);
-    setIsLoading(true); // Show loading spinner
-    setTimeout(() => {
-      setCandidates([
-        { id: 1, title: "Candidate 1" },
-        { id: 2, title: "Candidate 2" },
-        { id: 3, title: "Candidate 3" },
-        { id: 4, title: "Candidate 4" },
-        { id: 5, title: "Candidate 5" },
-      ]);
-      setIsJobSubmitted(true); // Mark job submission as true
-      setIsLoading(false); // Hide loading spinner
-    }, 2000); // Simulate API call delay
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("http://localhost:5000/submit-job-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ job_description: description }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setCandidates(data.candidates);
+      } else {
+        console.error(data.error || "Failed to fetch candidates");
+        alert("Error fetching candidates.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Something went wrong while fetching candidates.");
+    }
+
+    setIsLoading(false);
   };
 
-  const handleShowCV = (candidate) => {
-    setSelectedCandidateId(candidate.id); // Highlight the candidate
-    alert(`Displaying CV for ${candidate.title}`);
-  };
+  const handleShowCV = async (candidate) => {
+    setIsLoading(true);
 
-  const handleShowChat = (candidate) => {
-    setSelectedCandidateId(candidate.id); // Highlight the candidate
-    setIsChatOpen(true);
-  };
+    try {
+      const response = await fetch("http://localhost:5000/show-cv", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cv_id: candidate.cv_id }),
+      });
 
-  const handleCloseChat = () => {
-    setIsChatOpen(false);
-    setSelectedCandidateId(null); // Reset the highlight when closing the chat
-  };
+      const data = await response.json();
 
-  const handleClearDescription = () => {
-    setJobDescription("");
-    setCandidates([]);
-    setSelectedCandidateId(null); // Clear the selected candidate
-    setIsJobSubmitted(false); // Reset the job submission flag
+      if (response.ok) {
+        alert(`CV Content: ${data.cv_text}`);
+      } else {
+        console.error(data.error || "Failed to fetch CV.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+
+    setIsLoading(false);
   };
 
   return (
     <div className="App flex flex-col min-h-screen bg-lightBg dark:bg-darkBg text-lightText dark:text-darkText relative">
-      {/* Show LoadingSpinner with blurred background */}
       {isLoading && (
         <LoadingSpinner
           size="h-20 w-20"
@@ -63,46 +74,25 @@ const App = () => {
         />
       )}
 
-      {/* Disable interactions and blur content when loading */}
-      <div className={isLoading ? "pointer-events-none blur-md flex flex-col min-h-screen" : "flex flex-col min-h-screen"}>
-        <Header />
+      <Header />
 
-        {/* Main content */}
-        <div className="content flex-1 p-4">
-          <JobDescriptionInput
-            onSubmit={handleJobSubmit}
-            setJobDescription={setJobDescription}
-            setCandidates={setCandidates}
-            jobDescription={jobDescription}
-            handleClearDescription={handleClearDescription}
+      <div className="content flex-1 p-4">
+        <JobDescriptionInput onSubmit={handleJobSubmit} />
+
+        {candidates.length > 0 && (
+          <CandidatesList
+            candidates={candidates}
+            onShowCV={handleShowCV}
+            onChat={(candidate) => setIsChatOpen(true)}
           />
+        )}
 
-          {isJobSubmitted && candidates.length === 0 ? (
-            <p className="text-center text-gray-500 dark:text-gray-300 mt-4">
-              No candidates available.
-            </p>
-          ) : (
-            candidates.length > 0 && (
-              <CandidatesList
-                candidates={candidates}
-                selectedCandidateId={selectedCandidateId}
-                onShowCV={handleShowCV}
-                onChat={handleShowChat}
-              />
-            )
-          )}
-
-          {isChatOpen && (
-            <ChatPopup
-              candidate={candidates.find((c) => c.id === selectedCandidateId)}
-              onClose={handleCloseChat}
-            />
-          )}
-        </div>
-
-        {/* Footer is always at the bottom */}
-        <Footer />
+        {isChatOpen && (
+          <ChatPopup candidate={selectedCandidateId} onClose={() => setIsChatOpen(false)} />
+        )}
       </div>
+
+      <Footer />
     </div>
   );
 };
