@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from main_backend_model import rank_cvs_by_description, query_cv_by_id, start_chatbot_with_cv, show_cv
+from backend.main_backend_model import rank_cvs_by_description, query_cv_by_id, start_chatbot_with_cv, show_cv
 
 
 

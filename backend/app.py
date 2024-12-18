@@ -1,93 +1,80 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-from backend_model import (
-    retrieve_examples_and_instructions,
-    refine_user_prompt_with_llm,
-    extract_mandatory_conditions,
-    rank_and_validate_cvs,
-    query_cv_by_id
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import uvicorn
+from main_backend_model import (
+    rank_cvs_by_description,
+    query_cv_by_id,
+    start_chatbot_with_cv,
+    show_cv,
 )
 
-app = Flask(__name__)
-CORS(app)  
+app = FastAPI()
 
-#-----------------------------------Endpoint to submit job description-------------------------------------
+# Request models
+class JobDescription(BaseModel):
+    description: str
 
-@app.route("/submit-job-description", methods=["POST"])
-def submit_job_description():
-    data = request.get_json()
-    user_input_job_description = data.get("job_description")
+class CVQuery(BaseModel):
+    cv_id: str
 
-    if not user_input_job_description:
-        return jsonify({"error": "Job description is required"}), 400
+class ChatbotRequest(BaseModel):
+    cv_id: str
+    question: str
 
+class ShowCVRequest(BaseModel):
+    cv_id: str
+
+# Endpoints
+@app.post("/rank_cvs")
+async def rank_cvs(job_description: JobDescription):
+    """
+    Ranks CVs based on the job description provided.
+    """
     try:
-        # Step 1: Process job description
-        examples, instructions = retrieve_examples_and_instructions(user_input_job_description)
-        refined_job_description = refine_user_prompt_with_llm(user_input_job_description, examples, instructions)
-        mandatory_conditions = extract_mandatory_conditions(refined_job_description)
-
-        # Step 2: Rank CVs based on job description
-        ranked_cvs = rank_and_validate_cvs(refined_job_description, mandatory_conditions)
-
-        # Step 3: Format the ranked CVs for output
-        ranked_cvs_output = [
-            f"CV ID: {cv['id']}, Similarity Score: {cv['score']:.4f}"
-            for cv in ranked_cvs
-        ]
-        formatted_response = {
-            "top_ranked_cvs": f"Top ranked CVs based on refined job description:\n" + "\n".join(
-                f"{idx + 1}. {entry}" for idx, entry in enumerate(ranked_cvs_output)
-            ),
-        }
-        return jsonify(formatted_response)
+        ranked_cvs = rank_cvs_by_description(job_description.description)
+        return {"ranked_cvs": ranked_cvs}
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-
-#-------------------------------------------Endpoint to retrieve a CV by ID----------------------------------------
-
-@app.route("/show-cv", methods=["POST"])
-def show_cv():
-    data = request.get_json()
-    cv_id = data.get("cv_id")
-
-    if not cv_id:
-        return jsonify({"error": "CV ID is required"}), 400
-
+@app.post("/query_cv")
+async def query_cv(cv_query: CVQuery):
+    """
+    Retrieves a CV's content by its ID.
+    """
     try:
-        cv_text = query_cv_by_id(cv_id)
-        return jsonify({"cv_text": cv_text})
+        cv_text = query_cv_by_id(cv_query.cv_id)
+        if cv_text:
+            return {"cv_id": cv_query.cv_id, "cv_text": cv_text}
+        else:
+            raise HTTPException(status_code=404, detail="CV not found")
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        raise HTTPException(status_code=500, detail=str(e))
 
-#-------------------------------------------New Endpoint: Chatbot communication-------------------------------------
-
-@app.route("/ask-more-info", methods=["POST"])
-def ask_more_info():
-    data = request.get_json()
-    cv_id = data.get("cv_id")
-    user_message = data.get("message")
-
-    if not cv_id or not user_message:
-        return jsonify({"error": "CV ID and message are required"}), 400
-
+@app.post("/chatbot")
+async def chatbot(query: ChatbotRequest):
+    """
+    Starts a chatbot session with a specific CV and answers a user's question.
+    """
     try:
-        # Simulated chatbot initiation response (replace with actual logic)
-        bot_response = f"Chat started for CV ID: {cv_id}. Received your message: '{user_message}'."
-        return jsonify({"response": bot_response})
+        response = start_chatbot_with_cv(query.cv_id, query.question)
+        return {"response": response}
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
-#---------------------------------------New Endpoint: Clear chat messages---------------------------------------
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.route("/clear-chat", methods=["POST"])
-def clear_chat():
+@app.post("/show_cv")
+async def handle_show_cv(request: ShowCVRequest):
+    """
+    Fetches metadata or a preview for a CV by its ID.
+    """
     try:
-        # Logic for clearing saved chat messages if required
-        # Example placeholder response
-        return jsonify({"message": "Chat cleared successfully"})
+        result = show_cv(request.cv_id)
+        if result["success"]:
+            return {"message": result["message"]}
+        else:
+            raise HTTPException(status_code=404, detail=result["message"])
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        raise HTTPException(status_code=500, detail=f"Error showing CV: {str(e)}")
 
+# Run application
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
