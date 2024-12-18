@@ -274,7 +274,7 @@ def rank_and_validate_cvs(refined_job_description, mandatory_conditions):
         metadata = match.get('metadata', {})
 
         extracted_info = extract_skills_and_experience(metadata.get('text', ''))
-        print(f"\nCV's Info: {extracted_info}")
+        # print(f"\nCV's Info: {extracted_info}")
         
         is_valid = validate_cv(extracted_info, mandatory_conditions)
 
