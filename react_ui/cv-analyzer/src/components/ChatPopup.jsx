@@ -6,6 +6,7 @@ import { MdOutlineContentCopy } from "react-icons/md";
 import { BiDislike } from "react-icons/bi";
 import { BiLike } from "react-icons/bi";
 import { FaRegSmileWink } from "react-icons/fa";
+import axios from "axios";
 
 const ChatPopup = ({ candidate, onClose }) => {
   const [messages, setMessages] = useState(
@@ -39,22 +40,53 @@ const ChatPopup = ({ candidate, onClose }) => {
     onClose(); // Call the parent onClose function to close the popup
   };
 
-  const handleSend = () => {
-    if (!userMessage.trim()) return;
+  //-----------------------------------To Handle Chatbot Function----------------------------------------------------
 
-    // Add user message
+  const handleSend = async () => {
+    if (!userMessage.trim()) return;
+  
+    // Add the user's message to the chat
     const newMessages = [...messages, { sender: "user", text: userMessage }];
     setMessages(newMessages);
-
-    // Simulate bot response by echoing the user's message
+  
+    // Set bot typing status to true
     setIsTyping(true);
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { sender: "bot", text: userMessage }]);
+  
+    try {
+      const requestData = {
+        cv_id: candidate?.cv_id, // Candidate's CV ID
+        question: userMessage, // User's message (question)
+      };
+  
+      console.log("Sending data:", requestData); // Log the request data for debugging
+  
+      const response = await axios.post("http://localhost:8000/chatbot", requestData);
+  
+      if (response.data.response) {
+        setMessages((prev) => [
+          ...prev,
+          { sender: "bot", text: response.data.response },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { sender: "bot", text: "No response from chatbot." },
+        ]);
+      }
+    } catch (error) {
+      console.error("Error:", error.response || error.message);
+      setMessages((prev) => [
+        ...prev,
+        { sender: "bot", text: "Failed to get a response." },
+      ]);
+    } finally {
+      // Set bot typing status to false after receiving the response
       setIsTyping(false);
-    }, 500); // Simulate a short delay for typing effect
-
-    setUserMessage(""); // Clear input field
+  
+      setUserMessage(""); // Clear user input after sending
+    }
   };
+  
 
   return (
     <div

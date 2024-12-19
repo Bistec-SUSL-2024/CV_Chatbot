@@ -1,4 +1,6 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import uvicorn
 from main_backend_model import (
@@ -7,10 +9,27 @@ from main_backend_model import (
     start_chatbot_with_cv,
     show_cv,
 )
+import os
 
 app = FastAPI()
 
-# Request models
+origins = [
+    "http://localhost:3000",  # Allow frontend running on localhost (React app)
+    # Add any other domains here if necessary
+]
+
+# app.mount("/static", StaticFiles(directory="./data"), name="static")
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,  # Allows the specified domains
+    allow_credentials=True,  # Allows cookies to be sent if needed
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers in the request
+)
+
+
 class JobDescription(BaseModel):
     description: str
 
@@ -24,7 +43,9 @@ class ChatbotRequest(BaseModel):
 class ShowCVRequest(BaseModel):
     cv_id: str
 
-# Endpoints
+
+#-------------------------------------------------Rank CV Endpoint--------------------------------------------------
+
 @app.post("/rank_cvs")
 async def rank_cvs(job_description: JobDescription):
     """
@@ -35,6 +56,10 @@ async def rank_cvs(job_description: JobDescription):
         return {"ranked_cvs": ranked_cvs}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+#-------------------------------------------------Query CV Endpoint-----------------------------------------------------------
+
 
 @app.post("/query_cv")
 async def query_cv(cv_query: CVQuery):
@@ -50,6 +75,10 @@ async def query_cv(cv_query: CVQuery):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+#-------------------------------------------Chatbot Endpoint-----------------------------------------------
+
+
 @app.post("/chatbot")
 async def chatbot(query: ChatbotRequest):
     """
@@ -61,12 +90,17 @@ async def chatbot(query: ChatbotRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+#-------------------------------------Show CV Endpoint--------------------------------------------
+
+
 @app.post("/show_cv")
 async def handle_show_cv(request: ShowCVRequest):
     """
     Fetches metadata or a preview for a CV by its ID.
     """
     try:
+        # Assuming `show_cv` checks for file existence and returns a success message
         result = show_cv(request.cv_id)
         if result["success"]:
             return {"message": result["message"]}
@@ -75,6 +109,9 @@ async def handle_show_cv(request: ShowCVRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error showing CV: {str(e)}")
 
-# Run application
+
+
+#------------------------------------Main Section---------------------------------------------
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

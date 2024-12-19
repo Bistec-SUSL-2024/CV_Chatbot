@@ -95,42 +95,78 @@ def query_cv_by_id(cv_id):
 #-----------------------------------------------Chat_bot Function-------------------------------------------------------
 
 
-def start_chatbot_with_cv(cv_id):
+# def start_chatbot_with_cv(cv_id):
+#     cv_text = query_cv_by_id(cv_id)
+#     if cv_text:
+#         print("Starting the chatbot with the selected CV...\n")  
+#         try:
+#             fetch_response = pinecone_index.fetch(ids=[cv_id], namespace=namespace)
+            
+#             if 'vectors' in fetch_response and cv_id in fetch_response['vectors']:
+#                 cv_metadata = fetch_response['vectors'][cv_id]['metadata']
+#                 cv_embedding = fetch_response['vectors'][cv_id]['values']  
+#                 cv_text = cv_metadata['text']
+                
+#                 document_node = Document(
+#                     text=cv_text,
+#                     doc_id=cv_id,
+#                     embedding=cv_embedding  
+#                 )
+                
+#                 try:
+#                     index = VectorStoreIndex.from_documents([document_node], embed_model=embed_model, show_progress=False)
+#                     query_engine = index.as_query_engine()
+                    
+#                     while True:
+#                         question = input("\nEnter your question (or type 'exit' to quit): ")
+#                         if question.lower() == 'exit':
+#                             print("Exiting the chatbot.")
+#                             break
+                        
+#                         response = query_engine.query(question)
+#                         print(f"Answer: {response}\n")
+#                 except AttributeError as e:
+#                     print(f"Error: {e}. Please check if the document structure is compatible with VectorStoreIndex.")
+#             else:
+#                 print(f"No vectors found for CV ID {cv_id}")
+#         except Exception as e:
+#             print(f"Error fetching CV by ID {cv_id}: {e}")
+
+
+
+
+#-----------------use to integrate with front_end---------------------to run only backend use above code and comment this part--------#
+
+def start_chatbot_with_cv(cv_id, question):
     cv_text = query_cv_by_id(cv_id)
     if cv_text:
-        print("Starting the chatbot with the selected CV...\n")  
         try:
+    
             fetch_response = pinecone_index.fetch(ids=[cv_id], namespace=namespace)
             
             if 'vectors' in fetch_response and cv_id in fetch_response['vectors']:
                 cv_metadata = fetch_response['vectors'][cv_id]['metadata']
                 cv_embedding = fetch_response['vectors'][cv_id]['values']  
-                cv_text = cv_metadata['text']
                 
                 document_node = Document(
                     text=cv_text,
                     doc_id=cv_id,
-                    embedding=cv_embedding  
+                    embedding=cv_embedding
                 )
                 
-                try:
-                    index = VectorStoreIndex.from_documents([document_node], embed_model=embed_model, show_progress=False)
-                    query_engine = index.as_query_engine()
-                    
-                    while True:
-                        question = input("\nEnter your question (or type 'exit' to quit): ")
-                        if question.lower() == 'exit':
-                            print("Exiting the chatbot.")
-                            break
-                        
-                        response = query_engine.query(question)
-                        print(f"Answer: {response}\n")
-                except AttributeError as e:
-                    print(f"Error: {e}. Please check if the document structure is compatible with VectorStoreIndex.")
+                index = VectorStoreIndex.from_documents([document_node], embed_model=embed_model, show_progress=False)
+                query_engine = index.as_query_engine()
+
+                response = query_engine.query(question)
+                return str(response) 
+
             else:
-                print(f"No vectors found for CV ID {cv_id}")
+                return "Error: No vectors found for the provided CV."
         except Exception as e:
-            print(f"Error fetching CV by ID {cv_id}: {e}")
+            return f"Error: {str(e)}"
+    else:
+        return "Error: CV not found."
+
 
 
 
@@ -140,7 +176,7 @@ def normalize_string(s):
 #--------------------------------------------------Show CV Function-----------------------------------------------------
 
 
-def show_cv(cv_id):
+def show_cv(cv_id,):
     print(f"Searching for the original CV with ID '{cv_id}'...")
 
     normalized_cv_id = normalize_string(cv_id)
