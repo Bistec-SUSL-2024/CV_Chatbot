@@ -95,60 +95,13 @@ def query_cv_by_id(cv_id):
 #-----------------------------------------------Chat_bot Function-------------------------------------------------------
 
 
-# def start_chatbot_with_cv(cv_id):
-#     cv_text = query_cv_by_id(cv_id)
-#     if cv_text:
-#         print("Starting the chatbot with the selected CV...\n")  
-#         try:
-#             fetch_response = pinecone_index.fetch(ids=[cv_id], namespace=namespace)
-            
-#             if 'vectors' in fetch_response and cv_id in fetch_response['vectors']:
-#                 cv_metadata = fetch_response['vectors'][cv_id]['metadata']
-#                 cv_embedding = fetch_response['vectors'][cv_id]['values']  
-#                 cv_text = cv_metadata['text']
-                
-#                 document_node = Document(
-#                     text=cv_text,
-#                     doc_id=cv_id,
-#                     embedding=cv_embedding  
-#                 )
-                
-#                 try:
-#                     index = VectorStoreIndex.from_documents([document_node], embed_model=embed_model, show_progress=False)
-#                     query_engine = index.as_query_engine()
-                    
-#                     while True:
-#                         question = input("\nEnter your question (or type 'exit' to quit): ")
-#                         if question.lower() == 'exit':
-#                             print("Exiting the chatbot.")
-#                             break
-                        
-#                         response = query_engine.query(question)
-#                         print(f"Answer: {response}\n")
-#                 except AttributeError as e:
-#                     print(f"Error: {e}. Please check if the document structure is compatible with VectorStoreIndex.")
-#             else:
-#                 print(f"No vectors found for CV ID {cv_id}")
-#         except Exception as e:
-#             print(f"Error fetching CV by ID {cv_id}: {e}")
-
-# def start_chatbot_with_cv(cv_id, question):
-#     try:
-#         cv_text = query_cv_by_id(cv_id)
-#         if cv_text:
-#             print(f"Starting the chatbot with the selected CV...")  
-            
-#             # Fetch the CV from Pinecone
-#             fetch_response = pinecone_index.fetch(ids=[cv_id], namespace=namespace)
-# =======
-def start_chatbot_with_cv(cv_id, question):
-    try:
-        cv_text = query_cv_by_id(cv_id)
-        if cv_text:
-            print(f"Starting the chatbot with the selected CV...")  
-            
-            # Fetch the CV from Pinecone
+def start_chatbot_with_cv(cv_id):
+    cv_text = query_cv_by_id(cv_id)
+    if cv_text:
+        print("Starting the chatbot with the selected CV...\n")  
+        try:
             fetch_response = pinecone_index.fetch(ids=[cv_id], namespace=namespace)
+            
             if 'vectors' in fetch_response and cv_id in fetch_response['vectors']:
                 cv_metadata = fetch_response['vectors'][cv_id]['metadata']
                 cv_embedding = fetch_response['vectors'][cv_id]['values']  
@@ -160,80 +113,32 @@ def start_chatbot_with_cv(cv_id, question):
                     embedding=cv_embedding  
                 )
                 
-                index = VectorStoreIndex.from_documents([document_node], embed_model=embed_model, show_progress=False)
-                query_engine = index.as_query_engine()
-
-                response = query_engine.query(question)
-                return {"answer": str(response)}  
-                
+                try:
+                    index = VectorStoreIndex.from_documents([document_node], embed_model=embed_model, show_progress=False)
+                    query_engine = index.as_query_engine()
+                    
+                    while True:
+                        question = input("\nEnter your question (or type 'exit' to quit): ")
+                        if question.lower() == 'exit':
+                            print("Exiting the chatbot.")
+                            break
+                        
+                        response = query_engine.query(question)
+                        print(f"Answer: {response}\n")
+                except AttributeError as e:
+                    print(f"Error: {e}. Please check if the document structure is compatible with VectorStoreIndex.")
             else:
-                raise HTTPException(status_code=404, detail="No vectors found for CV ID")
-        else:
-            raise HTTPException(status_code=404, detail="CV not found")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+                print(f"No vectors found for CV ID {cv_id}")
+        except Exception as e:
+            print(f"Error fetching CV by ID {cv_id}: {e}")
 
-# def normalize_string(s):
-#     return s.replace('_', ' ').lower()
+
 
 def normalize_string(s):
-    # Normalizes a string for comparison
     return re.sub(r"[\W_]+", "", s).lower()
 
 #--------------------------------------------------Show CV Function-----------------------------------------------------
 
-# def show_cv(cv_id):
-#     print(f"Searching for the original CV with ID '{cv_id}'...")
-
-#     normalized_cv_id = normalize_string(cv_id)
-
-#     data_folder = Path("./data")
-#     if not data_folder.exists():
-#         print("Error: 'data' folder does not exist.")
-#         return
-    
-#     pdf_files = list(data_folder.glob("*.pdf"))
-
-#     normalized_filenames = [(normalize_string(file.stem), file) for file in pdf_files]
-
-#     best_match = process.extractOne(normalized_cv_id, [filename[0] for filename in normalized_filenames])
-
-#     if best_match and best_match[1] >= 80: 
-#         matched_file = next(file for name, file in normalized_filenames if normalize_string(file.stem) == best_match[0])
-#         print(f"Found CV: {matched_file}")
-        
-#         try:
-#             webbrowser.open(matched_file.resolve().as_uri())
-#             print(f"Opening CV '{matched_file.name}'...")
-#         except Exception as e:
-#             print(f"Error opening CV PDF: {e}")
-#     else:
-#         print(f"No matching CV PDF found for ID '{cv_id}'.")
-#         print("Check if the CV files are named correctly in the 'data' folder.")
-
-  
-#                 try:
-#                     index = VectorStoreIndex.from_documents([document_node], embed_model=embed_model, show_progress=False)
-#                     query_engine = index.as_query_engine()
-                    
-#                     while True:
-#                         question = input("\nEnter your question (or type 'exit' to quit): ")
-#                         if question.lower() == 'exit':
-#                             print("Exiting the chatbot.")
-#                             break
-                        
-#                         response = query_engine.query(question)
-#                         print(f"Answer: {response}\n")
-#                 except AttributeError as e:
-#                     print(f"Error: {e}. Please check if the document structure is compatible with VectorStoreIndex.")
-#             else:
-#                 print(f"No vectors found for CV ID {cv_id}")
-#         except Exception as e:
-#             print(f"Error fetching CV by ID {cv_id}: {e}")
-
-
-
-#--------------------------------------------------Show CV Function-----------------------------------------------------
 
 def show_cv(cv_id):
     print(f"Searching for the original CV with ID '{cv_id}'...")
@@ -289,6 +194,6 @@ if __name__ == "__main__":
             show_cv(selected_cv_id)
 
 
-        start_chatbot_with_cv(selected_cv_id)
+        start_chatbot_with_cv(selected_cv_id, )
     else:
         print("No CVs found for ranking.")
