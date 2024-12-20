@@ -8,15 +8,17 @@ const CandidatesList = ({ candidates, selectedCandidateId, onShowCV, onChat }) =
         <div
           key={candidate.cv_id}
           className={`flex justify-between items-center p-2 rounded mb-2 transition-all duration-200 ${
-            candidate.cv_id === selectedCandidateId ? "font-bold bg-blue-100" : "bg-gray-100 hover:bg-gray-200"
+            candidate.cv_id === selectedCandidateId ? "font-bold bg-blue-100" : "bg-gray-100 hover:bg-gray-300"
           }`}
         >
-          <span>{candidate.cv_id}</span> {/* Displaying cv_id */}
-          <span className="text-sm text-gray-500">
-            Score: {candidate.score.toFixed(3)} {/* Round the score to 3 decimal places */}
-          </span>
+          <div className="flex flex-1 justify-between">
+            <span>{candidate.cv_id}</span> {/* Displaying cv_id */}
+            <span className="text-m text-gray-700 text-right mr-8">
+              Score: {candidate.score.toFixed(3)} {/* Round the score to 3 decimal places */}
+            </span>
+          </div>
           <div className="flex space-x-2">
-          <button
+            <button
               className="bg-blue-300 px-4 py-2 rounded hover:bg-blue-600 hover:text-white"
               onClick={(e) => {
                 e.stopPropagation(); // Prevent interfering with parent click events
@@ -26,7 +28,7 @@ const CandidatesList = ({ candidates, selectedCandidateId, onShowCV, onChat }) =
               Show CV
             </button>
             <button
-              className="bg-blue-300 px-4 py-2 rounded hover:bg-gray-500 hover:text-white"
+              className="bg-blue-300 px-4 py-2 rounded hover:bg-blue-600 hover:text-white"
               onClick={() => onChat(candidate)} // Triggers the chat function
             >
               Ask More Info

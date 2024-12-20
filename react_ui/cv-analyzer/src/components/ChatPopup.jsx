@@ -140,7 +140,7 @@ const ChatPopup = ({ candidate, onClose }) => {
                   className={`mb-2 p-2 rounded ${
                     message.sender === "user"
                       ? "bg-purple-200 text-left text-black hover:text-white hover:bg-purple-500"
-                      : "bg-gray-200 text-right text-black hover:text-white hover:bg-gray-500"
+                      : "bg-gray-200 text-right text-black hover:text-white hover:bg-gray-400"
                   }`}
                 >
                   <p>
@@ -179,21 +179,13 @@ const ChatPopup = ({ candidate, onClose }) => {
                       >
                         <MdOutlineContentCopy />
                       </button>
-                      <button
-                        className="text-black hover:text-blue-600 focus:outline-none"
-                        title="Share"
-                        onClick={() =>
-                          alert("Share functionality is not implemented yet!")
-                        }
-                      >
-                        <FaShareAlt />
-                      </button>
+                      
                     </div>
                   )}
                 </div>
               ))}
               {isTyping && (
-                <p className="text-black text-sm italic">Bot is typing...</p>
+                <p className="text-black text-sm italic text-right">Bot is typing...</p>
               )}
             </div>
             <div ref={messagesEndRef} />

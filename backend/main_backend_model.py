@@ -181,7 +181,7 @@ def show_cv(cv_id,):
 
     normalized_cv_id = normalize_string(cv_id)
 
-    data_folder = Path("./data")
+    data_folder = Path("../data")
     if not data_folder.exists():
         print("Error: 'data' folder does not exist.")
         return {"success": False, "message": "Data folder does not exist."}
