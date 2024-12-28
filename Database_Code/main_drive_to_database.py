@@ -16,9 +16,11 @@ from llama_index.core.schema import Node
 
 load_dotenv()
 
-OpenAI_Key = os.getenv("Open_ai_key")
-Pinecone_API_Key = os.getenv("PINECONE_API")
-SERVICE_ACCOUNT_FILE = ""                           #------add the path to the service account file--------------------------------------------
+OpenAI_Key = os.getenv("openaiKEY")
+Pinecone_API_Key = os.getenv("pineconeAPI")
+SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE")
+
+                    #------add the path to the service account file--------------------------------------------
 
 os.environ["OPENAI_API_KEY"] = OpenAI_Key
 os.environ["PINECONE_API_KEY"] = Pinecone_API_Key
@@ -43,8 +45,11 @@ if index_name not in pc.list_indexes().names():
 pinecone_index = pc.Index(index_name)
 embed_model = OpenAIEmbedding()
 
-SOURCE_FOLDER_ID = '1pd3FKMd-3Vm7hESaerxAyGzoOJa7LxZX'  # CV_Storage
-TARGET_FOLDER_ID = '19-gSAcIxRTe6u5r6jv0HyUSGAkgilKgS'  # Markdown_Cvs
+#os.environ["cvStorage"] = SOURCE_FOLDER_ID
+#os.environ["markdownCV"] = TARGET_FOLDER_ID
+
+SOURCE_FOLDER_ID = '1HKDYBXEcE_QbYf5l9p2rDaBXGZk5BDc4'  # CV_Storage
+TARGET_FOLDER_ID = '1whaChKzr1JpKV_O7rxkFQJzaNWy2sPKG'  # Markdown_Cvs
 
 
 def normalize_doc_id(doc_id):
@@ -178,3 +183,5 @@ def process_pdfs_from_drive():
 if __name__ == "__main__":
     print("Processing PDFs from Google Drive...")
     process_pdfs_from_drive()
+
+    #updates done
