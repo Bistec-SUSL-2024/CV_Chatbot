@@ -1,1 +1,1 @@
-markdownify
+llama_index.vector_stores.pinecone

@@ -9,7 +9,7 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 from llama_index.embeddings.openai import OpenAIEmbedding
 from pinecone import Pinecone, ServerlessSpec
-from llama_index.storage.vector_store.pinecone import PineconeVectorStore
+from llama_index.vector_stores.pinecone import PineconeVectorStore
 from llama_index.core.schema import Node
 
 #------------------------------------------------ Load environment variables---------------------------------------------------------------------------------
@@ -17,6 +17,7 @@ from llama_index.core.schema import Node
 load_dotenv()
 
 OpenAI_Key = os.getenv("openaiKEY")
+print (OpenAI_Key)
 Pinecone_API_Key = os.getenv("pineconeAPI")
 SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE")
 
