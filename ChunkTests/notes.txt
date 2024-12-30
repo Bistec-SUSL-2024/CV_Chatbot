@@ -1,0 +1,9 @@
+Why Use Chunking?
+Vector Search Accuracy: Pinecone uses vector embeddings for similarity searches. Longer text may dilute meaningful features within a single vector. Chunking allows you to create more focused vectors, improving search precision.
+Handling Overlap: By overlapping chunks slightly, you ensure that no relevant information is lost, even if it spans across chunk boundaries.
+Efficient Query Matching: Smaller chunks make it easier for your chatbot to match specific queries to relevant portions of the CV.
+
+How to Chunk
+Define Chunk Size: Choose a chunk size based on the number of tokens (e.g., 300-500 tokens per chunk). This depends on the embedding model's maximum input size.
+Add Context: Use overlapping chunks (e.g., overlap 50 tokens) to maintain continuity.
+Annotate Chunks: Keep metadata (e.g., section headings, file name) for better traceability during retrieval.
