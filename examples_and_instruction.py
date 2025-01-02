@@ -12,13 +12,11 @@ PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 
-examples_namespace = "job_description_examples"
-
-
 #-----------------------------------------------Create Pinecone Index-----------------------------------------------------
 
+examples_namespace = "examples_and_instructions"
 pc = Pinecone(api_key=PINECONE_API_KEY)
-index_name = "test-db"
+index_name = "cv-analyzer"
 namespace = examples_namespace
 embedding_dimension = 1536
 
@@ -89,6 +87,7 @@ def store_examples_and_instructions_with_check():
                 "metadata": {"type": "instruction", "content": instructions}
             }
         ], namespace=examples_namespace)
+        print(f"Upserted vectors: 100%|{'█' * 50}| 1/1 [00:00<00:00]") 
     else:
         print("Instructions already exist in Pinecone. Skipping upsert.")
 
@@ -111,6 +110,7 @@ def store_examples_and_instructions_with_check():
                     }
                 }
             ], namespace=examples_namespace)
+            print(f"Upserted vectors: 100%|{'█' * 50}| 1/1 [00:00<00:00]") 
         else:
             print(f"Example {i+1} already exists in Pinecone. Skipping upsert.")
 
