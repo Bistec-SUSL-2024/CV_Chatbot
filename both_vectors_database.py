@@ -26,7 +26,7 @@ os.makedirs(new_docs_dir, exist_ok=True)
 
 # ----------------------------------------- Initialize Pinecone Index -------------------------------------------------
 
-index_name = "cv-analyzer"
+index_name = "cv-analyzer-2"
 namespace = "cvs-info"
 embedding_dimension = 1536
 
@@ -34,7 +34,7 @@ if index_name not in pc.list_indexes().names():
     pc.create_index(
         name=index_name,
         dimension=embedding_dimension,
-        metric="cosine",
+        metric="dotproduct",
         spec=ServerlessSpec(cloud="aws", region="us-east-1")
     )
 

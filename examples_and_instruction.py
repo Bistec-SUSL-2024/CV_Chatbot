@@ -16,7 +16,7 @@ os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 
 examples_namespace = "examples_and_instructions"
 pc = Pinecone(api_key=PINECONE_API_KEY)
-index_name = "cv-analyzer"
+index_name = "cv-analyzer-2"
 namespace = examples_namespace
 embedding_dimension = 1536
 
@@ -24,7 +24,7 @@ if index_name not in pc.list_indexes().names():
     pc.create_index(
         name=index_name,
         dimension=embedding_dimension,
-        metric="cosine",
+        metric="dotproduct",
         spec=ServerlessSpec(cloud="aws", region="us-east-1")
     )
 
@@ -37,29 +37,48 @@ embed_model = OpenAIEmbedding()
 examples = [
     {
         "job_description": "We need a Software Engineer with 3+ years of experience in Python and Django. Must have knowledge of REST APIs and familiarity with PostgreSQL. Candidates without these skills will not be considered.",
-        "mandatory_keywords": ['software engineer', '3+ years', 'python', 'django', 'rest apis', 'postgresql']
+        "mandatory_keywords": ['software engineer', '3+ years', 'python', 'django', 'rest apis', 'postgresql'],
+        "output_format": "We are currently looking for a Software Engineer with 3+ years of experience in Python and Django. Candidates must demonstrate proficiency in developing REST APIs and using PostgreSQL. Applicants without these skills will not be considered."
     },
     {
         "job_description": "Seeking a Data Scientist with expertise in machine learning algorithms, 5+ years of experience, and proficiency in Python, TensorFlow, and PyTorch. Preferred experience with AWS or GCP.",
-        "mandatory_keywords": ['data scientist', 'machine learning algorithms', '5+ years', 'python', 'tensorflow', 'pytorch', 'aws', 'gcp']
+        "mandatory_keywords": ['data scientist', 'machine learning algorithms', '5+ years', 'python', 'tensorflow', 'pytorch', 'aws', 'gcp'],
+        "output_format": "We are seeking a Data Scientist with 5+ years of experience in machine learning algorithms. Candidates must have proficiency in Python, TensorFlow, and PyTorch. Experience with AWS or GCP is preferred."
     },
     {
         "job_description": "Looking for a Project Manager with PMP certification and 7+ years of experience leading cross-functional teams. Expertise in Agile methodologies is mandatory.",
-        "mandatory_keywords": ['project manager', 'pmp certification', '7+ years', 'cross-functional teams', 'agile methodologies']
+        "mandatory_keywords": ['project manager', 'pmp certification', '7+ years', 'cross-functional teams', 'agile methodologies'],
+        "output_format": "We are looking for a Project Manager with PMP certification and 7+ years of experience. Candidates must have expertise in leading cross-functional teams and Agile methodologies. Applicants without these qualifications will not be considered."
     }
 ]
 
+
 instructions = """
 Refine the following job description to:
-1. Improve specificity by highlighting key responsibilities.
-2. Ensure alignment with required skills and experience.
-3. Extract mandatory requirements and exclude candidates who do not meet them.
+
+1. Improve specificity by:
+   - Highlighting the key responsibilities of the role.
+   - Clearly emphasizing the mandatory skills and experience.
+
+2. Ensure alignment with required qualifications:
+   - Extract the **job role**, **years of experience**, **core technologies or skills**, and **certifications**.
+   - Explicitly state any conditions under which candidates will be excluded.
+
+3. Follow this format:
+   - Start with a summary of the job position (e.g., "We are seeking a [Job Role] with [Years of Experience].").
+   - List the mandatory skills and qualifications in a single sentence.
+   - Conclude with an exclusion statement (e.g., "Applicants without these qualifications will not be considered.").
+
+4. Use consistent tone and language. Avoid adding details unless explicitly stated in the input.
+
 
 Mandatory Keywords to Extract:
 - Job Role
 - Years of Experience
 - Core Technologies or Skills
+- Core Tools
 - Certifications (if any)
+
 """
 
 #----------------------------------Function For Store Examples & Instructions in Pinecone--------------------------------------

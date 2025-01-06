@@ -9,6 +9,7 @@ from pinecone import Pinecone
 from fuzzywuzzy import process
 from openai import OpenAI
 import re
+import ast
 
 load_dotenv()
 
@@ -79,46 +80,68 @@ def retrieve_examples_and_instructions(user_input):
         print(f"Error retrieving data from Pinecone: {e}")
         return [], ""
 
-#-------------------------------------------------Generate Combined Prompt------------------------------------------------
+# ------------------------------------------------- Generate Combined Prompt ------------------------------------------------
 
 def generate_combined_prompt(user_input, retrieved_data, instructions):
     """
     Generate a combined prompt using user input, job descriptions, mandatory keywords, and instructions.
     """
-    combined_prompt = f"User Input: {user_input}\n\n"
+    combined_prompt = f"User Input: {user_input.strip()}\n\n"
     combined_prompt += "Relevant Job Descriptions and Mandatory Keywords:\n"
 
     for i, example in enumerate(retrieved_data, start=1):
+        job_description = example.get('job_description', 'N/A').strip()
+        mandatory_keywords = ', '.join(example.get('mandatory_keywords', []))
         combined_prompt += f"\nExample {i}:\n"
-        combined_prompt += f"Job Description: {example['job_description']}\n"
-        combined_prompt += f"Mandatory Keywords: {', '.join(example['mandatory_keywords'])}\n"
+        combined_prompt += f"Job Description: {job_description}\n"
+        combined_prompt += f"Mandatory Keywords: {mandatory_keywords}\n"
 
     if instructions:
-        combined_prompt += f"\nInstructions:\n{instructions}\n"
+        combined_prompt += f"\nInstructions:\n{instructions.strip()}\n"
 
     combined_prompt += "\nPlease refine the user's input based on the above examples and instructions."
     return combined_prompt
 
-#-------------------------------------------------Refine User Prompt with LLM------------------------------------------------
+# ------------------------------------------------- Refine User Prompt with LLM ------------------------------------------------
+
+# In-memory cache for consistency---------------------------
+cache = {}
 
 def refine_user_prompt_with_llm(user_input, examples, instructions):
     """
-    Use OpenAI's LLM to refine the user's input based on the provided examples and instructions.
+    Use OpenAI's LLM to refine the user's input with deterministic and consistent outputs.
+    Includes caching to prevent re-generating results for the same input.
     """
-    try:
-        combined_prompt = generate_combined_prompt(user_input, examples, instructions)
+    def normalize_text(input_text):
+        """
+        Normalize text by removing extra spaces, converting to lowercase, and ensuring consistency.
+        """
+        return " ".join(input_text.strip().split()).lower()
 
+    try:
+        normalized_input = normalize_text(user_input)
+
+        # Create a unique cache key using normalized input, examples, and instructions
+        cache_key = (normalized_input, tuple((ex['job_description'], tuple(ex['mandatory_keywords'])) for ex in examples), instructions)
+        if cache_key in cache:
+            return cache[cache_key]
+
+        combined_prompt = generate_combined_prompt(normalized_input, examples, instructions)
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",  
+            model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "system", "content": "You are a highly precise assistant. Always produce structured and consistent outputs based on the examples and instructions."},
                 {"role": "user", "content": combined_prompt}
             ],
-            max_tokens=150,  
-            temperature=0.2  
+            max_tokens=300,
+            temperature=0.0,  
+            top_p=1.0  
         )
-        
-        refined_input = response.choices[0].message.content  
+
+        refined_input = normalize_text(response.choices[0].message.content)
+
+        cache[cache_key] = refined_input
+
         return refined_input
 
     except Exception as e:
@@ -163,42 +186,58 @@ def extract_skills_and_experience(full_text):
 
 def extract_mandatory_conditions(job_description):
     """
-    Extract mandatory conditions from a refined job description.
-    Focuses on years of experience, skills, and certifications.
+    Use OpenAI's LLM to extract mandatory conditions (experience, skills, certifications, tools) from a refined job description.
     """
-    mandatory_conditions = {
-        'years_of_experience': None,
-        'skills': [],
-        'certifications': [],
-        'tools': []
-    }
+    try:
+        
+        prompt = f"""
+        Given the following job description, extract the mandatory conditions:
+        - Years of experience
+        - Skills (technologies, programming languages, etc.)
+        - Certifications (if any)
+        - Tools (if any)
 
-    # Extract years of experience--------
+        Job Description: 
+        {job_description}
 
-    experience_match = re.search(r'(minimum|at least)?\s*(\d+)\s+years?\s*(?:of experience)?', job_description, re.IGNORECASE)
-    if experience_match:
-        mandatory_conditions['years_of_experience'] = int(experience_match.group(2))
-    
-    # Extract skills (handles multiple skills listed together---------
+        Output format:
+        {{
+            'years_of_experience': <years>,
+            'skills': ['<skill1>', '<skill2>', ...],
+            'certifications': ['<certification1>', '<certification2>', ...],
+            'tools': ['<tool1>', '<tool2>', ...]
+        }}
+        """
 
-    skills_match = re.search(r'core technologies or skills:\s*(.+?)(?:certifications|$)', job_description, re.IGNORECASE | re.DOTALL)
-    if skills_match:
-        skills = skills_match.group(1).split(',')
-        mandatory_conditions['skills'].extend([skill.strip().lower() for skill in skills])
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo", 
+            messages=[{"role": "system", "content": "You are an assistant that extracts mandatory conditions from job descriptions."},
+                      {"role": "user", "content": prompt}],
+            max_tokens=300,
+            temperature=0.0,  
+            top_p=1.0  
+        )
 
-    # Extract certifications------------
+        response_message = response.choices[0].message.content.strip()
+        mandatory_conditions = ast.literal_eval(response_message)
 
-    certifications_match = re.findall(r'certification[s]?.*?(preferred|required|in .+?)(?:,|\.|$)', job_description, re.IGNORECASE)
-    if certifications_match:
-        mandatory_conditions['certifications'].extend([cert.strip().lower() for cert in certifications_match])
+        mandatory_conditions = {
+            'years_of_experience': mandatory_conditions.get('years_of_experience', None),
+            'skills': mandatory_conditions.get('skills', []),
+            'certifications': mandatory_conditions.get('certifications', []),
+            'tools': mandatory_conditions.get('tools', [])
+        }
+        
+        return mandatory_conditions
+    except Exception as e:
+        print(f"Error extracting mandatory conditions with LLM: {e}")
+        return {
+            'years_of_experience': None,
+            'skills': [],
+            'certifications': [],
+            'tools': []
+        }
 
-    # Extract Tools------------
-
-    # tools_match = re.findall(r'(azure|aws|python|sql|react|django|java|hadoop|spark|data\s+engineering|[a-zA-Z]+[0-9]*)', job_description, re.IGNORECASE)
-    # if tools_match:
-    #     mandatory_conditions['tools'].extend([tool.strip().lower() for tool in tools_match])
-
-    return mandatory_conditions
 
 
 #----------------------Validate-------------------------------------
@@ -290,6 +329,7 @@ def rank_and_validate_cvs(refined_job_description, mandatory_conditions):
     print(f"Found {len(valid_cvs)} valid CVs based on the job description.")
 
     return valid_cvs
+
 #-------------------------------------------------CV Selection Function-----------------------------------------------------------
 
 def query_cv_by_id(cv_id):
@@ -394,7 +434,7 @@ def show_cv(cv_id):
 if __name__ == "__main__":
     
    user_input_job_description = """I have a job vacancy fpr software engineer.
-    Experience required least 3 years"""
+    Experience required least 3 years. must have experience with python and django."""
    
    examples, instructions = retrieve_examples_and_instructions(user_input_job_description)
 
