@@ -22,7 +22,13 @@ Check it out here:
        - Store Markdown files in another Google Drive folder.
      - Pinecone Database:
        - Upsert the converted Markdown files into a Pinecone Vector Database for efficient storage and retrieval.
-
+     - React Frontend Features:
+       - Job Candidate Search:
+          - Enter a job description to retrieve a list of relevant job candidates.
+       - Candidate Chatbot:
+          - Select a candidate from the list to generate a chatbot.
+          - Ask specific questions about the selected candidate, and receive detailed responses.
+            
 ### 3. Phase-3: Advanced Search and Large CV Support
    - **Planned Enhancements**:
      - Hybrid Search:
