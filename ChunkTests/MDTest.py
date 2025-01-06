@@ -43,7 +43,7 @@ else:
 
     
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=400,
+        chunk_size=300,
         chunk_overlap=50
     )
 
