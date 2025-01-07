@@ -64,10 +64,10 @@ else:
         for i, chunk in enumerate(chunks):
             chunk_id = f"{file_name}_chunk_{i}"
            
-            embedding = get_embedding(chunk.page_content) 
+            # embedding = get_embedding(chunk.page_content) 
 
            
-            index.upsert([(chunk_id, embedding, {"text": chunk.page_content})])
+            # index.upsert([(chunk_id, embedding, {"text": chunk.page_content})])
             print(f"Upserted chunk {chunk_id} into Pinecone.")
 
 

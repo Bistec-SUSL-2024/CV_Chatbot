@@ -1,1 +1,1 @@
-llama_index.vector_stores.pinecone
+'1whaChKzr1JpKV_O7rxkFQJzaNWy2sPKG'
