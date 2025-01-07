@@ -77,6 +77,7 @@ Check it out here:
    - Markdownify
    - Pinecone Database
    - LlamaIndex
+   - React
 3. **Phase-3**:
    - Advanced Pinecone capabilities
    - Hybrid search algorithms
