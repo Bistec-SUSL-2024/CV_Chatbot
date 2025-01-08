@@ -1,4 +1,6 @@
 #This file download MD Cvs from google drive and chunk. After chunking upsert to pinecone
+#NEED TO IMPROVE
+
 import os
 import io
 from dotenv import load_dotenv
