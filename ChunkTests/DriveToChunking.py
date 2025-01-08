@@ -1,3 +1,5 @@
+#This file download MD CVs from google drive folder and conerted to chunks
+
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload

@@ -1,3 +1,5 @@
+#This file chunk the hardcoded markdown CV
+
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 markdown_text = """

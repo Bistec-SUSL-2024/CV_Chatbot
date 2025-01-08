@@ -1,3 +1,5 @@
+#This file upsert data to pinecone database
+
 import os
 import numpy as np
 from pinecone import Pinecone, ServerlessSpec
