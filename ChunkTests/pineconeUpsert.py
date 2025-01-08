@@ -39,7 +39,7 @@ if INDEX_NAME not in [idx.name for idx in pinecone_instance.list_indexes()]:
             region=PINECONE_ENVIRONMENT
         )
     )
-#index = pinecone_instance.index(test-3)
+
 pc = Pinecone(api_key=PINECONE_API_KEY)
 index_name = "test-3"
 
@@ -85,7 +85,7 @@ else:
             chunk_id = f"{file_name}_chunk_{i}"
             try:
                 embedding = get_embedding(chunk.page_content)
-                index.upsert([(chunk_id, embedding, {"text": chunk.page_content})])
+                index_name.upsert([(chunk_id, embedding, {"text": chunk.page_content})])
                 logger.info(f"Upserted chunk {chunk_id} into Pinecone.")
             except Exception as e:
                 logger.error(f"Failed to upsert chunk {chunk_id}: {e}")
