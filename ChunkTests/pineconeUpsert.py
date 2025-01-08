@@ -7,7 +7,9 @@ from pinecone import Pinecone, ServerlessSpec
 import io
 import os
 import openai
-
+from dotenv import load_dotenv
+load_dotenv()
+openai.api_key = os.getenv("openaiKEY")
 # Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -16,6 +18,7 @@ logger = logging.getLogger(__name__)
 SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE")
 PINECONE_API_KEY = os.getenv("pineconeAPI")
 PINECONE_ENVIRONMENT = os.getenv("PINECONE_ENVIRONMENT")
+openai.api_key = os.getenv("openaiKEY")
 INDEX_NAME = "test-3"
 FOLDER_ID = '1whaChKzr1JpKV_O7rxkFQJzaNWy2sPKG'
 
@@ -78,8 +81,15 @@ else:
         chunk_overlap=50
     )
 
+
     for file_name, markdown_text in markdown_texts:
         chunks = text_splitter.create_documents([markdown_text])
+
+        def get_embedding(text):
+            response = openai.Embedding.create(
+        input=text,
+        model="text-embedding-ada-002"
+    )
 
         for i, chunk in enumerate(chunks):
             chunk_id = f"{file_name}_chunk_{i}"
