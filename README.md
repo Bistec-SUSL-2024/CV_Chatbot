@@ -1,5 +1,7 @@
 # CV Chatbot Project: README
 
+Welcome to CV Chatbot, an advanced AI-powered solution designed to make CV analysis smarter, faster, and more insightful. This application doesn’t just scan resumes—it thoroughly analyzes them to extract essential information on education, skills, work experience, and more. At the same time, our built-in chatbot brings an interactive experience, allowing users to get real-time insights, ask specific questions, and receive personalized assistance on CV evaluation
+
 ---
 # ✨ Features
 + **Automated CV Parsing:** Effortlessly extracts crucial information from resumes, including educational background, key skills, job experience, certifications, and even project highlights.
