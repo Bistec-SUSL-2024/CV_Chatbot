@@ -1,10 +1,5 @@
 # CV Chatbot Project: README
 
-## 🌐 Live Demo (Phase-1)
-We’ve successfully deployed Phase-1 of the CV Chatbot, which supports **CV analysis for individual resumes**.
-Check it out here:
-👉 [CV Chatbot Phase-1 Demo](https://cv-chatbot-analyzer.streamlit.app/) 👈
-
 ---
 # ✨ Features
 + **Automated CV Parsing:** Effortlessly extracts crucial information from resumes, including educational background, key skills, job experience, certifications, and even project highlights.
@@ -20,7 +15,7 @@ Check it out here:
 
 # 🚀 How It Works
 1. **Upload CVs:** The user uploads PDF or text-based CVs into the system.
-2. **Automated Text Extraction:** Our advanced NLP model scans each CV and extracts relevant information such as name, education, skills, work history, and notable achievements.
+2. **Create Embeddings for CVS:** Create both sparse and dense vectors using the bm25 algorithm and GPT 3.5 model. Then store it in the pinecone index.
 3. **Skill Matching and Ranking:** Each CV is analyzed for matching skills against specified job requirements. Candidates are then ranked based on how well they align with the job criteria.
 4. **Chatbot Interaction:** Users can ask the chatbot specific questions such as
   + "Who has Python and Django experience?"
@@ -38,6 +33,12 @@ Check it out here:
 ## 🚀 Phases of Development
 
 ### 1. Phase-1: Individual CV Analysis
+
+We’ve successfully deployed Phase-1 of the CV Chatbot, which supports **CV analysis for individual resumes**.
+
+Check it out here:
+👉 [CV Chatbot Phase-1 Demo](https://cv-chatbot-analyzer.streamlit.app/) 👈
+
    - **Features**:
      - Upload a single CV for analysis.
      - Extract and process key information like skills, education, and work experience.
