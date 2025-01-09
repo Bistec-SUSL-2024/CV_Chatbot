@@ -39,7 +39,7 @@ index = pc.Index(INDEX_NAME)
 def generate_random_vector(dim=1536):
     return np.random.rand(dim).tolist()
 
-def chunk_text(text, chunk_size=500, overlap=20):
+def chunk_text(text, chunk_size=750, overlap=50):
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=chunk_size,
         chunk_overlap=overlap
@@ -76,8 +76,7 @@ else:
 
             
             chunks = chunk_text(markdown_text)
-
-            
+          
             for i, chunk in enumerate(chunks):
                 chunk_id = f"{file_name}_chunk_{i}"
                 vector = generate_random_vector()
