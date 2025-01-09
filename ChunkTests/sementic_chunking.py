@@ -4,14 +4,15 @@ from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from google.oauth2 import service_account
-from sentence_transformers import SentenceTransformer
-import numpy as np
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+import openai
+import pinecone
 from pinecone import Pinecone, ServerlessSpec
-from sklearn.cluster import AgglomerativeClustering
 
 # Load environment variables
 load_dotenv()
 
+# Google Drive API setup
 SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE")
 SCOPES = ['https://www.googleapis.com/auth/drive']
 creds = service_account.Credentials.from_service_account_file(
@@ -19,60 +20,50 @@ creds = service_account.Credentials.from_service_account_file(
 )
 drive_service = build('drive', 'v3', credentials=creds)
 
+# OpenAI API setup
+OPENAI_API_KEY = os.getenv("openaiKEY")
+openai.api_key = OPENAI_API_KEY
+
+# Pinecone setup
 PINECONE_API_KEY = os.getenv("pineconeAPI")
-PINECONE_ENVIRONMENT = os.getenv("PineconeEnvironment2")
-INDEX_NAME = os.getenv("PineconeIndex2")
+PINECONE_ENVIRONMENT = os.getenv("PINECONE_ENVIRONMENT")
+INDEX_NAME = os.getenv("PineconeIndex")
 
-# Initialize Pinecone
-pc = Pinecone(api_key=PINECONE_API_KEY)
+# Initialize Pinecone instance
+pc = Pinecone(api_key=PINECONE_API_KEY, environment=PINECONE_ENVIRONMENT)
 
+# Check and create the index if necessary
 if INDEX_NAME not in pc.list_indexes().names():
     pc.create_index(
         name=INDEX_NAME,
-        dimension=1536,
+        dimension=1536,  # Embedding dimension
         metric="cosine",
-        spec=ServerlessSpec(cloud="aws", region=PINECONE_ENVIRONMENT.split("-")[1])
+        spec=ServerlessSpec(cloud='aws', region='us-west-2')  # Adjust based on your cloud provider and region
     )
 
 index = pc.Index(INDEX_NAME)
 
-# Sentence Transformer Model
-model = SentenceTransformer('all-MiniLM-L6-v2')  # Efficient and fast sentence embedding model
+# Function to generate embeddings using OpenAI
+def generate_embedding(text):
+    try:
+        response = openai.Embedding.create(input=text, model="text-embedding-ada-002")
+        return response["data"][0]["embedding"]
+    except Exception as e:
+        print(f"Error generating embedding: {e}")
+        return None
 
-def generate_random_vector(dim=1536):
-    return np.random.rand(dim).tolist()
+# Function to split text into chunks
+def chunk_text(text, chunk_size=750, overlap=50):
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=overlap
+    )
+    return text_splitter.create_documents([text])
 
-def semantic_chunking(text, threshold=1.5):
-    """
-    Create semantic chunks using sentence embeddings and hierarchical clustering.
-    """
-    sentences = text.split('. ')
-    embeddings = model.encode(sentences)
-    
-    # Perform hierarchical clustering
-    clustering = AgglomerativeClustering(n_clusters=None, distance_threshold=threshold, linkage='average')
-    clustering.fit(embeddings)
-    
-    chunks = []
-    current_chunk = []
-    current_cluster = clustering.labels_[0]
-
-    for i, sentence in enumerate(sentences):
-        if clustering.labels_[i] == current_cluster:
-            current_chunk.append(sentence)
-        else:
-            chunks.append('. '.join(current_chunk))
-            current_chunk = [sentence]
-            current_cluster = clustering.labels_[i]
-
-    # Add the last chunk
-    if current_chunk:
-        chunks.append('. '.join(current_chunk))
-
-    return chunks
-
+# Google Drive folder ID containing markdown files
 FOLDER_ID = '1whaChKzr1JpKV_O7rxkFQJzaNWy2sPKG'
 
+# Fetch markdown files from Google Drive
 query = f"'{FOLDER_ID}' in parents and mimeType='text/markdown'"
 results = drive_service.files().list(q=query, fields="files(id, name)").execute()
 files = results.get('files', [])
@@ -87,7 +78,7 @@ else:
         file_name = file['name']
 
         try:
-            # Download file
+            # Download the file content
             request = drive_service.files().get_media(fileId=file_id)
             fh = io.BytesIO()
             downloader = MediaIoBaseDownload(fh, request)
@@ -99,25 +90,28 @@ else:
             markdown_text = fh.read().decode('utf-8')
             print(f"Downloaded: {file_name}")
 
-            # Perform semantic chunking
-            chunks = semantic_chunking(markdown_text)
-            
+            # Chunk the text
+            chunks = chunk_text(markdown_text)
+
             for i, chunk in enumerate(chunks):
                 chunk_id = f"{file_name}_chunk_{i}"
-                vector = model.encode(chunk).tolist()
-                metadata = {"text": chunk}
+                embedding = generate_embedding(chunk.page_content)
 
-                print(f"Chunk {i}:\n{chunk}\n")
+                if embedding:
+                    metadata = {"text": chunk.page_content}
 
-                try:
-                    upsert_response = index.upsert(vectors=[{
-                        "id": chunk_id,
-                        "values": vector,
-                        "metadata": metadata
-                    }])
-                    print(f"Upserted chunk: {chunk_id}")
-                except Exception as e:
-                    print(f"Error during upsert of {chunk_id}: {e}")
+                    # Upsert the embedding into Pinecone
+                    try:
+                        index.upsert(vectors=[{
+                            "id": chunk_id,
+                            "values": embedding,
+                            "metadata": metadata
+                        }])
+                        print(f"Upserted chunk: {chunk_id}")
+                    except Exception as e:
+                        print(f"Error during upsert of {chunk_id}: {e}")
+                else:
+                    print(f"Skipping chunk {i} due to embedding generation error.")
 
         except Exception as e:
             print(f"Error processing file {file_name}: {e}")
