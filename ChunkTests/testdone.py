@@ -20,7 +20,7 @@ creds = service_account.Credentials.from_service_account_file(
 )
 drive_service = build('drive', 'v3', credentials=creds)
 
-PINECONE_API_KEY = os.getenv("PineconeCVAnalyzerAPI2")
+PINECONE_API_KEY = os.getenv("pineconeAPI")
 PINECONE_ENVIRONMENT = os.getenv("PineconeEnvironment2")
 INDEX_NAME = os.getenv("PineconeIndex2")
 
