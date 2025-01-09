@@ -1,16 +1,15 @@
-#This file download MD Cvs from google drive and chunk. After chunking upsert to pinecone
-#NEED TO IMPROVE
-
 import os
 import io
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload
 from google.oauth2 import service_account
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from sentence_transformers import SentenceTransformer
 import numpy as np
 from pinecone import Pinecone, ServerlessSpec
+from sklearn.cluster import AgglomerativeClustering
 
+# Load environment variables
 load_dotenv()
 
 SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE")
@@ -24,6 +23,7 @@ PINECONE_API_KEY = os.getenv("pineconeAPI")
 PINECONE_ENVIRONMENT = os.getenv("PineconeEnvironment2")
 INDEX_NAME = os.getenv("PineconeIndex2")
 
+# Initialize Pinecone
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
 if INDEX_NAME not in pc.list_indexes().names():
@@ -36,15 +36,40 @@ if INDEX_NAME not in pc.list_indexes().names():
 
 index = pc.Index(INDEX_NAME)
 
+# Sentence Transformer Model
+model = SentenceTransformer('all-MiniLM-L6-v2')  # Efficient and fast sentence embedding model
+
 def generate_random_vector(dim=1536):
     return np.random.rand(dim).tolist()
 
-def chunk_text(text, chunk_size=750, overlap=50):
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=chunk_size,
-        chunk_overlap=overlap
-    )
-    return text_splitter.create_documents([text])
+def semantic_chunking(text, threshold=1.5):
+    """
+    Create semantic chunks using sentence embeddings and hierarchical clustering.
+    """
+    sentences = text.split('. ')
+    embeddings = model.encode(sentences)
+    
+    # Perform hierarchical clustering
+    clustering = AgglomerativeClustering(n_clusters=None, distance_threshold=threshold, linkage='average')
+    clustering.fit(embeddings)
+    
+    chunks = []
+    current_chunk = []
+    current_cluster = clustering.labels_[0]
+
+    for i, sentence in enumerate(sentences):
+        if clustering.labels_[i] == current_cluster:
+            current_chunk.append(sentence)
+        else:
+            chunks.append('. '.join(current_chunk))
+            current_chunk = [sentence]
+            current_cluster = clustering.labels_[i]
+
+    # Add the last chunk
+    if current_chunk:
+        chunks.append('. '.join(current_chunk))
+
+    return chunks
 
 FOLDER_ID = '1whaChKzr1JpKV_O7rxkFQJzaNWy2sPKG'
 
@@ -62,7 +87,7 @@ else:
         file_name = file['name']
 
         try:
-            
+            # Download file
             request = drive_service.files().get_media(fileId=file_id)
             fh = io.BytesIO()
             downloader = MediaIoBaseDownload(fh, request)
@@ -74,15 +99,15 @@ else:
             markdown_text = fh.read().decode('utf-8')
             print(f"Downloaded: {file_name}")
 
+            # Perform semantic chunking
+            chunks = semantic_chunking(markdown_text)
             
-            chunks = chunk_text(markdown_text)
-          
             for i, chunk in enumerate(chunks):
                 chunk_id = f"{file_name}_chunk_{i}"
-                vector = generate_random_vector()
-                metadata = {"text": chunk.page_content}
+                vector = model.encode(chunk).tolist()
+                metadata = {"text": chunk}
 
-                print(f"Chunk {i}: {chunk.page_content}\n")
+                print(f"Chunk {i}:\n{chunk}\n")
 
                 try:
                     upsert_response = index.upsert(vectors=[{
