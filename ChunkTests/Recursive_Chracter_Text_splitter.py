@@ -1,5 +1,4 @@
 #This file download MD Cvs from google drive and chunk. After chunking upsert to pinecone
-#NEED TO IMPROVE
 #Chunking Method : RecursiveCharacterTextSplitter
 
 import os
@@ -19,6 +18,7 @@ SCOPES = ['https://www.googleapis.com/auth/drive']
 creds = service_account.Credentials.from_service_account_file(
     SERVICE_ACCOUNT_FILE, scopes=SCOPES
 )
+
 drive_service = build('drive', 'v3', credentials=creds)
 
 PINECONE_API_KEY = os.getenv("pineconeAPI")
@@ -74,7 +74,6 @@ else:
             fh.seek(0)
             markdown_text = fh.read().decode('utf-8')
             print(f"Downloaded: {file_name}")
-
             
             chunks = chunk_text(markdown_text)
           
