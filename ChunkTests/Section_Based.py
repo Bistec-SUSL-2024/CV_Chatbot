@@ -10,7 +10,6 @@ import re
 import numpy as np
 from pinecone import Pinecone, ServerlessSpec
 
-# Load environment variables
 load_dotenv()
 
 SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_FILE")
@@ -24,10 +23,9 @@ PINECONE_API_KEY = os.getenv("pineconeAPI")
 PINECONE_ENVIRONMENT = os.getenv("PineconeEnvironment2")
 INDEX_NAME = os.getenv("PineconeIndex2")
 
-# Initialize Pinecone instance
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
-# Check and create the index if necessary
+
 if INDEX_NAME not in pc.list_indexes().names():
     pc.create_index(
         name=INDEX_NAME,
@@ -38,37 +36,36 @@ if INDEX_NAME not in pc.list_indexes().names():
 
 index = pc.Index(INDEX_NAME)
 
-# Function to generate random vectors (for placeholder embeddings)
 def generate_random_vector(dim=1536):
     return np.random.rand(dim).tolist()
 
-# Function to chunk text based on sections (e.g., Markdown headers)
+
 def chunk_text_by_sections(text):
-    # This regular expression matches headers in Markdown (e.g., '# Section Title')
+   
     section_pattern = r'(^|\n)(#{1,6})\s*(.*?)(?=\n|$)'
     
-    # Find all sections (headers)
+    
     sections = re.split(section_pattern, text)
     
     chunks = []
     current_chunk = ""
     for section in sections:
-        if section.startswith("#"):  # This is a header, start a new section
-            if current_chunk:  # If there's existing content in the chunk, save it
+        if section.startswith("#"):  
+            if current_chunk:  
                 chunks.append(current_chunk.strip())
-            current_chunk = section  # Start a new chunk with the header
+            current_chunk = section  
         else:
-            current_chunk += section  # Add content to the current chunk
+            current_chunk += section  
     
     if current_chunk:
-        chunks.append(current_chunk.strip())  # Append any remaining content
+        chunks.append(current_chunk.strip()) 
     
     return chunks
 
-# Google Drive folder ID containing markdown files
+
 FOLDER_ID = '1whaChKzr1JpKV_O7rxkFQJzaNWy2sPKG'
 
-# Fetch markdown files from Google Drive
+
 query = f"'{FOLDER_ID}' in parents and mimeType='text/markdown'"
 results = drive_service.files().list(q=query, fields="files(id, name)").execute()
 files = results.get('files', [])
@@ -83,7 +80,7 @@ else:
         file_name = file['name']
 
         try:
-            # Download the file content
+            
             request = drive_service.files().get_media(fileId=file_id)
             fh = io.BytesIO()
             downloader = MediaIoBaseDownload(fh, request)
@@ -95,16 +92,16 @@ else:
             markdown_text = fh.read().decode('utf-8')
             print(f"Downloaded: {file_name}")
 
-            # Chunk the text by sections
+            
             chunks = chunk_text_by_sections(markdown_text)
 
-            # Process each chunk
+            
             for i, chunk in enumerate(chunks):
                 chunk_id = f"{file_name}_chunk_{i}"
                 vector = generate_random_vector()
                 metadata = {"text": chunk}
 
-                print(f"Chunk {i}: {chunk[:100]}...")  # Print the first 100 chars for preview
+                print(f"Chunk {i}: {chunk[:100]}...")  
 
                 try:
                     upsert_response = index.upsert(vectors=[{
