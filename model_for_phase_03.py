@@ -8,8 +8,10 @@ from llama_index.core.schema import Document
 from pinecone import Pinecone
 from fuzzywuzzy import process
 from openai import OpenAI
+from rank_bm25 import BM25Okapi
 import re
 import ast
+import json
 
 load_dotenv()
 
@@ -37,6 +39,27 @@ def generate_embeddings(text):
     except Exception as e:
         print(f"Error generating embeddings: {e}")
         return None
+    
+#------------------------------------------------Generate Sparse Vectors------------------------------------------------
+
+def generate_bm25_sparse_vector(texts):
+    """
+    Generate BM25 sparse vectors for a list of texts.
+
+    Args:
+        texts (list of str): List of texts to process.
+
+    Returns:
+        tuple: Sparse vectors and idf keys.
+    """
+    try:
+        tokenized_corpus = [text.split() for text in texts]
+        bm25 = BM25Okapi(tokenized_corpus)
+        sparse_vectors = [bm25.get_scores(doc_tokens) for doc_tokens in tokenized_corpus]
+        return sparse_vectors, list(bm25.idf.keys())
+    except Exception as e:
+        print(f"Error generating BM25 sparse vectors: {e}")
+        return None, None
 
 #-------------------------------------------------Retrieve Examples and Instructions------------------------------------------------
 
@@ -151,35 +174,71 @@ def refine_user_prompt_with_llm(user_input, examples, instructions):
 
 #----------------------------------------Function for extract_skills_and_experience From CVS----------------------------------------------------
 
-
 def extract_skills_and_experience(full_text):
-    """
-    Extracts skills, experience, and certifications from CVs
-    """
-    extracted_info = {
-        'skills': [],
-        'experience': [],
-        'certifications': [],
-        # 'tools': []
-    }
-    
-    # Extract skills
-    skills_match = re.findall(r'\b(?:Python|JavaScript|SQL|Azure|AWS|React|Django|Data Engineering)\b', full_text, re.IGNORECASE)
-    extracted_info['skills'] = list(set(skills_match))  
+    try:
+        # Adjust the prompt to focus on extracting information only from the working experience section
+        prompt = f"""
+        Given the following full_text, extract the following details ONLY from the 'skills' section:
+        -Skills (technologies, programming languages, etc)
+         
 
-    # Extract experience
-    experience_match = re.findall(r'(\d+)\s+years? of experience', full_text, re.IGNORECASE)
-    if experience_match:
-        extracted_info['experience'] = [int(exp) for exp in experience_match]
+        Given the following full_text, extract the following details ONLY from the 'experience' section:
+        - Identify date ranges for job experience in the format 'YYYY-MM to YYYY-MM' or similar. 
+        - If no end date is provided, assume it is the current date.
+        - Calculate the total years of experience from these date ranges and provide it as an integer.
+       
+        Please ignore other sections like education or personal information when calculating total years of experience. 
 
-    # Extract certifications
-    certifications_match = re.findall(r'\b(?:Certified|Certification|Certifications)\b.*?[\.,;]', full_text, re.IGNORECASE)
-    extracted_info['certifications'] = certifications_match
+        Ensure the output format is:
+        {{
+            'years_of_experience': <integer>,
+            'skills': ['<skill1>', '<skill2>', ...],
+        }}
 
-    # tools_match = re.findall(r'\b(?:Docker|Kubernetes|Terraform|Apache|Spark|Tableau|Power BI|Hadoop)\b', certification_text, re.IGNORECASE)
-    # extracted_info['tools'] = list(set(tools_match))
+        full_text: 
+        {full_text}
+        """
 
-    return extracted_info
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo", 
+            messages=[
+                {"role": "system", "content": "You are an assistant that extracts structured data from CV text, focusing only on work experience."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=300,
+            temperature=0.0,
+            top_p=1.0
+        )
+
+        response_message = response.choices[0].message.content.strip()
+        
+        # Ensure the response is in a valid format before processing
+        try:
+            user_conditions = ast.literal_eval(response_message)
+        except (ValueError, SyntaxError) as e:
+            print(f"Error parsing response: {e}")
+            user_conditions = {}
+
+        # Convert extracted years_of_experience to int and ensure robust handling
+        extracted_info = {
+            'years_of_experience': int(user_conditions.get('years_of_experience', 0)),
+            'skills': user_conditions.get('skills', []),
+            # 'certifications': user_conditions.get('certifications', []),
+            # 'tools': user_conditions.get('tools', [])
+        }
+
+        return extracted_info
+
+    except Exception as e:
+        print(f"Error extracting skills and experience: {e}")
+        return {
+            'years_of_experience': 0,
+            'skills': [],
+            # 'certifications': [],
+            # 'tools': []
+        }
+
+
 
 #-------------------------------------------------Extract Mandatory Keywords------------------------------------------------
 
@@ -227,8 +286,13 @@ def extract_mandatory_conditions(job_description):
             'certifications': mandatory_conditions.get('certifications', []),
             'tools': mandatory_conditions.get('tools', [])
         }
+
+        key_words_for_search = list(mandatory_conditions.values())
+        flattened_list = [key_words_for_search[0]] + [skill for sublist in key_words_for_search[1:] for skill in sublist]
+        print(f"Mandatory keywords : {mandatory_conditions}")
         
-        return mandatory_conditions
+        return mandatory_conditions, flattened_list
+    
     except Exception as e:
         print(f"Error extracting mandatory conditions with LLM: {e}")
         return {
@@ -242,7 +306,20 @@ def extract_mandatory_conditions(job_description):
 
 #----------------------Validate-------------------------------------
 
-def validate_cv(metadata, mandatory_conditions):
+def validate_cv(extracted_info_from_user, mandatory_conditions):
+
+
+    def normalize_text(input_text):
+        """
+        Normalize text by removing extra spaces, converting to lowercase, and ensuring consistency.
+        """
+        return " ".join(input_text.strip().split()).lower()
+
+    def normalize_skills(skills):
+            """
+                 Normalize a list of skills using the normalize_text function.
+            """
+            return set(normalize_text(skill) for skill in skills)
    
     # Check years of experience--------------
 
@@ -251,58 +328,83 @@ def validate_cv(metadata, mandatory_conditions):
     
     if required_experience is not None:
 
-        cv_experience = int(metadata.get('experience', [0])[0]) if metadata.get('experience') else 0
+        cv_experience = extracted_info_from_user.get('years_of_experience', 0)
         
         print(f"CV Experience: {cv_experience}")
         
         if cv_experience < int(required_experience):  
             return False
 
-    # # Check required skills-------------------
+    # Check required skills-------------------
 
-    # required_skills = set(mandatory_conditions.get('skills', []))
-    # if required_skills:
-    #     cv_skills = set(metadata.get('skills', []))
-    #     print(f"CV Skills: {cv_skills}")
-    #     if not cv_skills.issubset(required_skills):
-    #         return False
+    required_skills = set(mandatory_conditions.get('skills', []))
+    required_skills = normalize_skills(mandatory_conditions.get('skills', []))
+    if required_skills:
+        cv_skills = set(extracted_info_from_user.get('skills', []))
+        cv_skills = normalize_skills(extracted_info_from_user.get('skills', []))
+        # print(f"CV Skills: {cv_skills}")
+        if not required_skills & cv_skills:
+            print("No matching skills....")
+            return False
 
     # # Check certifications--------------------
 
     # required_certifications = set(mandatory_conditions.get('certifications', []))
     # if required_certifications:
-    #     cv_certifications = set(metadata.get('certifications', []))
+    #     cv_certifications = set(extracted_info_from_user.get('certifications', []))
     #     print(f"CV Certifications: {cv_certifications}")
     #     if not required_certifications.issubset(cv_certifications):
     #         return False
     
     # # Check Tools--------------------
 
-    # # required_tools = set(mandatory_conditions.get('tools', []))
-    # # if required_tools:
-    # #     cv_tools = set(metadata.get('tools', []))
-    # #     print(f"CV Tools: {cv_tools}")
-    # #     if not required_tools.issubset(cv_tools):
-    # #         return False
+    # required_tools = set(mandatory_conditions.get('tools', []))
+    # if required_tools:
+    #     cv_tools = set(extracted_info_from_user.get('tools', []))
+    #     print(f"CV Tools: {cv_tools}")
+    #     if not required_tools.issubset(cv_tools):
+    #         return False
 
     return True
 
 
 #-------------------------------------------------Rank CVs by Description------------------------------------------------
 
-def rank_and_validate_cvs(refined_job_description, mandatory_conditions):
+def rank_and_validate_cvs(refined_job_description, mandatory_conditions, mandatory_keywords):
     """
     Rank CVs by relevance and validate them based on mandatory conditions (skills, experience, certificates).
     """
     print("Ranking CVs based on refined job description...")
 
+
+        # Convert all items in the list to strings
+    query_texts = [str(item) for item in mandatory_keywords]
+
+        # Generate the sparse vector for the query keywords
+    query_sparse_vector, idf_keys = generate_bm25_sparse_vector(query_texts)
+
+    if query_sparse_vector is None:
+        raise ValueError("Failed to generate sparse vectors for the query.")
+
+        # Use the first sparse vector from the query
+    query_vector = query_sparse_vector[0]
+
+        # Convert the NumPy array to a Python list for Pinecone
+    query_sparse = {
+            "indices": list(range(len(query_vector))),
+            "values": query_vector.tolist()  # Convert ndarray to list
+        }
+
     query_embedding = generate_embeddings(refined_job_description)
     if query_embedding is None:
         print("Error: Failed to generate embedding for the job description.")
         return []
+    
+    hdense, hsparse = hybrid_score_norm(query_embedding, query_sparse, alpha=0.20)
 
     query_results = pinecone_index.query(
-        vector=query_embedding,
+        vector=hdense,
+        sparse_vector=hsparse,
         top_k=10, 
         include_metadata=True,
         namespace="cvs-info"
@@ -311,6 +413,7 @@ def rank_and_validate_cvs(refined_job_description, mandatory_conditions):
     valid_cvs = []
     for match in query_results['matches']:
         metadata = match.get('metadata', {})
+        # print(f"metadata : {metadata}")
 
         extracted_info = extract_skills_and_experience(metadata.get('text', ''))
         print(f"\nCV's Info: {extracted_info}")
@@ -329,6 +432,28 @@ def rank_and_validate_cvs(refined_job_description, mandatory_conditions):
     print(f"Found {len(valid_cvs)} valid CVs based on the job description.")
 
     return valid_cvs
+
+
+#------------------ Function For Hybrid Algorithm--------------------------------
+
+def hybrid_score_norm(dense, sparse, alpha: float):
+    """Hybrid score using a convex combination
+
+    alpha * dense + (1 - alpha) * sparse
+
+    Args:
+        dense: Array of floats representing
+        sparse: a dict of `indices` and `values`
+        alpha: scale between 0 and 1
+    """
+    if alpha < 0 or alpha > 1:
+        raise ValueError("Alpha must be between 0 and 1")
+    hs = {
+        'indices': sparse['indices'],
+        'values':  [v * (1 - alpha) for v in sparse['values']]
+    }
+    return [v * alpha for v in dense], hs
+
 
 #-------------------------------------------------CV Selection Function-----------------------------------------------------------
 
@@ -433,7 +558,7 @@ def show_cv(cv_id):
 
 if __name__ == "__main__":
     
-   user_input_job_description = """I have a job vacancy fpr software engineer.
+   user_input_job_description = """I have a job vacancy for software engineer.
     Experience required least 3 years. must have experience with python and django."""
    
    examples, instructions = retrieve_examples_and_instructions(user_input_job_description)
@@ -445,9 +570,8 @@ if __name__ == "__main__":
        print("Refined Job Description:")
        print(refined_job_description)
  
-       mandatory_conditions = extract_mandatory_conditions(refined_job_description)
-       print(f"Mandotary Conditions(refined JD): {mandatory_conditions}\n")
-       ranked_cvs = rank_and_validate_cvs(refined_job_description, mandatory_conditions)
+       mandatory_conditions, keywords = extract_mandatory_conditions(refined_job_description)
+       ranked_cvs = rank_and_validate_cvs(refined_job_description, mandatory_conditions, keywords)
        
        if ranked_cvs:
            print("\nTop ranked CVs based on refined job description:")
