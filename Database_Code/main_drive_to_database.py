@@ -3,10 +3,7 @@ import io
 import re
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
-import markdownify
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
+import mar
 from llama_index.embeddings.openai import OpenAIEmbedding
 from pinecone import Pinecone, ServerlessSpec
 from llama_index.vector_stores.pinecone import PineconeVectorStore
@@ -18,7 +15,7 @@ load_dotenv()
 
 OpenAI_Key = os.getenv("Open_ai_key")
 Pinecone_API_Key = os.getenv("PINECONE_API")
-SERVICE_ACCOUNT_FILE = ""                           #------add the path to the service account file--------------------------------------------
+SERVICE_ACCOUNT_FILE = os.getenv("Service_Account_Path")      #------add the path to the service account file--------------------------------------------
 
 os.environ["OPENAI_API_KEY"] = OpenAI_Key
 os.environ["PINECONE_API_KEY"] = Pinecone_API_Key
