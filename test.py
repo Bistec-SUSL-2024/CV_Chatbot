@@ -12,6 +12,7 @@ from rank_bm25 import BM25Okapi
 import re
 import ast
 
+
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OpenAI_Key")
@@ -173,35 +174,95 @@ def refine_user_prompt_with_llm(user_input, examples, instructions):
 
 #----------------------------------------Function for extract_skills_and_experience From CVS----------------------------------------------------
 
-
 def extract_skills_and_experience(full_text):
     """
-    Extracts skills, experience, and certifications from CVs
+    Extract structured data (skills and years of experience) from the full_text section of a CV.
+    Includes caching to prevent re-processing the same input.
     """
-    extracted_info = {
-        'skills': [],
-        'experience': [],
-        'certifications': [],
-        # 'tools': []
-    }
-    
-    # Extract skills
-    skills_match = re.findall(r'\b(?:Python|JavaScript|SQL|Azure|AWS|React|Django|Data Engineering)\b', full_text, re.IGNORECASE)
-    extracted_info['skills'] = list(set(skills_match))  
+    def normalize_text_2(input_text):
+        """
+        Normalize text by removing extra spaces, converting to lowercase, and ensuring consistency.
+        """
+        return " ".join(input_text.strip().split()).lower()
 
-    # Extract experience
-    experience_match = re.findall(r'(\d+)\s+years? of experience', full_text, re.IGNORECASE)
-    if experience_match:
-        extracted_info['experience'] = [int(exp) for exp in experience_match]
+    try:
+        normalized_text_2 = normalize_text_2(full_text)
 
-    # Extract certifications
-    certifications_match = re.findall(r'\b(?:Certified|Certification|Certifications)\b.*?[\.,;]', full_text, re.IGNORECASE)
-    extracted_info['certifications'] = certifications_match
+        if normalized_text_2 in cache:
+            return cache[normalized_text_2]
 
-    # tools_match = re.findall(r'\b(?:Docker|Kubernetes|Terraform|Apache|Spark|Tableau|Power BI|Hadoop)\b', certification_text, re.IGNORECASE)
-    # extracted_info['tools'] = list(set(tools_match))
 
-    return extracted_info
+        prompt = f"""
+        Given the following full_text, extract the following details ONLY from the 'skills' section:
+        - Skills (technologies, programming languages, etc)
+         
+        Given the following full_text, extract the following details ONLY from the 'experience' section:
+        - Identify date ranges for job experience in the format 'YYYY-MM to YYYY-MM' or similar. 
+        - If no end date is provided, assume it is the current date.
+        - Calculate the total years of experience from these date ranges and provide it as an integer.
+       
+        Please ignore other sections like education or personal information when calculating total years of experience. 
+        
+
+        Ensure the output format is:
+        {{
+            'years_of_experience': <integer>,
+            'skills': ['<skill1>', '<skill2>', ...],
+        }}
+
+        full_text: 
+        {full_text}
+        """
+
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are an assistant that extracts structured data from CV text."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=300,
+            temperature=0.0,
+            top_p=1.0
+        )
+
+        response_message = response.choices[0].message.content.strip()
+
+        # Validate response format
+        if not response_message.startswith("{") or not response_message.endswith("}"):
+            print("Invalid response format:", response_message)
+            return {
+                'years_of_experience': 0,
+                'skills': []
+            }
+
+        # Parse response safely
+        try:
+            user_conditions = ast.literal_eval(response_message)
+        except (SyntaxError, ValueError) as e:
+            print(f"Error parsing response: {e}")
+            return {
+                'years_of_experience': 0,
+                'skills': []
+            }
+
+        # Prepare the structured output
+        extracted_info = {
+            'years_of_experience': int(user_conditions.get('years_of_experience', 0)),
+            'skills': user_conditions.get('skills', [])
+        }
+
+        # Save the result in cache
+        cache[normalized_text_2] = extracted_info
+
+        return extracted_info
+
+    except Exception as e:
+        print(f"Error extracting skills and experience: {e}")
+        return {
+            'years_of_experience': 0,
+            'skills': []
+        }
+
 
 #-------------------------------------------------Extract Mandatory Keywords------------------------------------------------
 
@@ -214,8 +275,8 @@ def extract_mandatory_conditions(job_description):
         
         prompt = f"""
         Given the following job description, extract the mandatory conditions:
-        - Years of experience
-        - Skills (technologies, programming languages, etc.)
+        - Years of experience(If years of experience not included in users prompt set it as 0)
+        - Skills (technologies, programming languages, etc. If skills are not mentioned in user prompt set it as [])
         - Certifications (if any)
         - Tools (if any)
 
@@ -269,7 +330,20 @@ def extract_mandatory_conditions(job_description):
 
 #----------------------Validate-------------------------------------
 
-def validate_cv(metadata, mandatory_conditions):
+def validate_cv(extracted_info_from_user, mandatory_conditions):
+
+
+    def normalize_text(input_text):
+        """
+        Normalize text by removing extra spaces, converting to lowercase, and ensuring consistency.
+        """
+        return " ".join(input_text.strip().split()).lower()
+
+    def normalize_skills(skills):
+            """
+                 Normalize a list of skills using the normalize_text function.
+            """
+            return set(normalize_text(skill) for skill in skills)
    
     # Check years of experience--------------
 
@@ -278,39 +352,42 @@ def validate_cv(metadata, mandatory_conditions):
     
     if required_experience is not None:
 
-        cv_experience = int(metadata.get('experience', [0])[0]) if metadata.get('experience') else 0
+        cv_experience = extracted_info_from_user.get('years_of_experience', 0)
         
         print(f"CV Experience: {cv_experience}")
         
         if cv_experience < int(required_experience):  
             return False
 
-    # # Check required skills-------------------
+    # Check required skills-------------------
 
-    # required_skills = set(mandatory_conditions.get('skills', []))
-    # if required_skills:
-    #     cv_skills = set(metadata.get('skills', []))
-    #     print(f"CV Skills: {cv_skills}")
-    #     if not cv_skills.issubset(required_skills):
-    #         return False
+    required_skills = set(mandatory_conditions.get('skills', []))
+    required_skills = normalize_skills(mandatory_conditions.get('skills', []))
+    if required_skills:
+        cv_skills = set(extracted_info_from_user.get('skills', []))
+        cv_skills = normalize_skills(extracted_info_from_user.get('skills', []))
+        # print(f"CV Skills: {cv_skills}")
+        if not required_skills & cv_skills:
+            print("No matching skills....")
+            return False
 
     # # Check certifications--------------------
 
     # required_certifications = set(mandatory_conditions.get('certifications', []))
     # if required_certifications:
-    #     cv_certifications = set(metadata.get('certifications', []))
+    #     cv_certifications = set(extracted_info_from_user.get('certifications', []))
     #     print(f"CV Certifications: {cv_certifications}")
     #     if not required_certifications.issubset(cv_certifications):
     #         return False
     
     # # Check Tools--------------------
 
-    # # required_tools = set(mandatory_conditions.get('tools', []))
-    # # if required_tools:
-    # #     cv_tools = set(metadata.get('tools', []))
-    # #     print(f"CV Tools: {cv_tools}")
-    # #     if not required_tools.issubset(cv_tools):
-    # #         return False
+    # required_tools = set(mandatory_conditions.get('tools', []))
+    # if required_tools:
+    #     cv_tools = set(extracted_info_from_user.get('tools', []))
+    #     print(f"CV Tools: {cv_tools}")
+    #     if not required_tools.issubset(cv_tools):
+    #         return False
 
     return True
 
@@ -347,7 +424,7 @@ def rank_and_validate_cvs(refined_job_description, mandatory_conditions, mandato
         print("Error: Failed to generate embedding for the job description.")
         return []
     
-    hdense, hsparse = hybrid_score_norm(query_embedding, query_sparse, alpha=0.75)
+    hdense, hsparse = hybrid_score_norm(query_embedding, query_sparse, alpha=0.20)
 
     query_results = pinecone_index.query(
         vector=hdense,
@@ -360,6 +437,7 @@ def rank_and_validate_cvs(refined_job_description, mandatory_conditions, mandato
     valid_cvs = []
     for match in query_results['matches']:
         metadata = match.get('metadata', {})
+        # print(f"metadata : {metadata}")
 
         extracted_info = extract_skills_and_experience(metadata.get('text', ''))
         print(f"\nCV's Info: {extracted_info}")
@@ -504,8 +582,8 @@ def show_cv(cv_id):
 
 if __name__ == "__main__":
     
-   user_input_job_description = """I have a job vacancy fpr software engineer.
-    Experience required least 3 years. must have experience with python and django."""
+   user_input_job_description = """I have a job vacancy for an Accountant. experience at least 5 years.
+    """
    
    examples, instructions = retrieve_examples_and_instructions(user_input_job_description)
 

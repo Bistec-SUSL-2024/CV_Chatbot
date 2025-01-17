@@ -49,7 +49,33 @@ examples = [
         "job_description": "Looking for a Project Manager with PMP certification and 7+ years of experience leading cross-functional teams. Expertise in Agile methodologies is mandatory.",
         "mandatory_keywords": ['project manager', 'pmp certification', '7+ years', 'cross-functional teams', 'agile methodologies'],
         "output_format": "We are looking for a Project Manager with PMP certification and 7+ years of experience. Candidates must have expertise in leading cross-functional teams and Agile methodologies. Applicants without these qualifications will not be considered."
+    },
+    {
+        "job_description": "We are looking for a Quality Assurance Specialist with 4+ years of experience in manual and automated testing. Must have knowledge of Selenium, JIRA, and experience working in Agile environments. ISTQB certification is preferred.",
+        "mandatory_keywords": ["quality assurance", "4+ years", "manual testing", "automated testing", "selenium", "jira", "agile environments", "istqb certification"],
+        "output_format": "We are seeking a Quality Assurance Specialist with 4+ years of experience in manual and automated testing. Candidates must have knowledge of Selenium, JIRA, and experience working in Agile environments. ISTQB certification is preferred."
+    },
+    {
+        "job_description": "We need a Backend Developer with 3+ years of experience in Node.js, Django, or Flask. Proficiency in REST APIs, database design (PostgreSQL, MongoDB), and cloud platforms like AWS or Azure is required.",
+        "mandatory_keywords": ["backend developer", "3+ years", "node.js", "django", "flask", "rest apis", "database design", "postgresql", "mongodb", "aws", "azure"],
+        "output_format": "We are currently looking for a Backend Developer with 3+ years of experience in Node.js, Django, or Flask. Candidates must demonstrate proficiency in developing REST APIs, database design (PostgreSQL, MongoDB), and cloud platforms such as AWS or Azure. Applicants without these skills will not be considered."
+    },
+    {
+        "job_description": "Seeking a Frontend Developer with 3+ years of experience in React, Angular, or Vue.js. Must have expertise in responsive design, CSS frameworks (Bootstrap, Tailwind), and version control (Git). Knowledge of TypeScript is a plus.",
+        "mandatory_keywords": ["frontend developer", "3+ years", "react", "angular", "vue.js", "responsive design", "css frameworks", "bootstrap", "tailwind", "git", "typescript"],
+        "output_format": "We are seeking a Frontend Developer with 3+ years of experience in React, Angular, or Vue.js. Candidates must have expertise in responsive design, CSS frameworks (Bootstrap, Tailwind), and version control tools like Git. Knowledge of TypeScript is a plus."
+    },
+    {
+        "job_description": "Looking for an Accountant with 5+ years of experience in financial reporting, accounts payable/receivable, and tax compliance. Proficiency in QuickBooks, SAP, or Xero is mandatory. CPA certification is preferred.",
+        "mandatory_keywords": ["accountant", "5+ years", "financial reporting", "accounts payable", "accounts receivable", "tax compliance", "quickbooks", "sap", "xero", "cpa certification"],
+        "output_format": "We are looking for an Accountant with 5+ years of experience in financial reporting, accounts payable/receivable, and tax compliance. Candidates must be proficient in using tools like QuickBooks, SAP, or Xero. CPA certification is preferred."
+    },
+    {
+        "job_description": "We are seeking a Doctor with an MBBS degree and 5+ years of clinical experience. Must have expertise in diagnosing and treating patients, and familiarity with electronic medical records (EMR) systems. Board certification is mandatory.",
+        "mandatory_keywords": ["doctor", "mbbs", "5+ years", "clinical experience", "diagnosing", "treating patients", "emr systems", "board certification"],
+        "output_format": "We are seeking a Doctor with an MBBS degree and 5+ years of clinical experience. Candidates must have expertise in diagnosing and treating patients, along with familiarity with electronic medical records (EMR) systems. Board certification is mandatory."
     }
+
 ]
 
 
