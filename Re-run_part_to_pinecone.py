@@ -160,6 +160,6 @@ def monitor_folder(source_folder_id, target_folder_id):
 # --------------------------------------Main--------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    SOURCE_FOLDER_ID = '1lOpqd5bYWWKUjEW8k935_i2lKAHY88wX'  # CV_Storage
-    TARGET_FOLDER_ID = '1Ck-_5_nS3zrCtBTmq87g5VK0OsYSOxrH'  # Markdown_Cvs
+    SOURCE_FOLDER_ID = '1tS1F0CoeaQy3NWBaWaU8foCoStmfZ0Fv'  # CV_Storage
+    TARGET_FOLDER_ID = '1AYZuzhd9qa1gZXARx2-9zEk79runGvve'  # Markdown_Cvs
     monitor_folder(SOURCE_FOLDER_ID, TARGET_FOLDER_ID)

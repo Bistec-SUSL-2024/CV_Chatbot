@@ -18,7 +18,7 @@ load_dotenv()
 
 OpenAI_Key = os.getenv("Open_ai_key")
 Pinecone_API_Key = os.getenv("PINECONE_API")
-SERVICE_ACCOUNT_FILE = ""                           #------add the path to the service account file--------------------------------------------
+SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_PATH1")                          #------add the path to the service account file--------------------------------------------
 
 os.environ["OPENAI_API_KEY"] = OpenAI_Key
 os.environ["PINECONE_API_KEY"] = Pinecone_API_Key
@@ -43,8 +43,8 @@ if index_name not in pc.list_indexes().names():
 pinecone_index = pc.Index(index_name)
 embed_model = OpenAIEmbedding()
 
-SOURCE_FOLDER_ID = '1pd3FKMd-3Vm7hESaerxAyGzoOJa7LxZX'  # CV_Storage
-TARGET_FOLDER_ID = '19-gSAcIxRTe6u5r6jv0HyUSGAkgilKgS'  # Markdown_Cvs
+SOURCE_FOLDER_ID = '1LbE3x3hh9_F_1bZHbP6uHPjstfKQjyR8'  # CV_Storage
+TARGET_FOLDER_ID = '1PR6GtbKtq0qFUo6vIH_8riW2zWqsiZML'  # Markdown_Cvs
 
 
 def normalize_doc_id(doc_id):
