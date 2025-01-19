@@ -17,6 +17,12 @@ def extract_text_from_pdf(file_path):
             text += page.extract_text() + "\n"
     return text
 
+def preprocess_text(text):
+    """Preprocess text to normalize and clean it."""
+    text = text.replace("\n", " ").replace("\r", " ").strip()
+    text = " ".join(text.split())  # Remove extra spaces
+    return text
+
 def detect_section(line, section_keywords):
     """Detect the section heading using fuzzy matching."""
     for section, keywords in section_keywords.items():
@@ -25,14 +31,14 @@ def detect_section(line, section_keywords):
                 return section
     return None
 
-def refine_with_gpt(current_section, line):
-    """Refine section classification using GPT."""
+def refine_with_gpt(current_section, line, previous_content):
+    """Refine section classification using GPT with context."""
     try:
         response = openai.ChatCompletion.create(
-            model="gpt-4",  # Use GPT-4 for better context
+            model="gpt-4",
             messages=[
-                {"role": "system", "content": "You are a CV section classifier."},
-                {"role": "user", "content": f"Classify this line into a section like Personal Information, Skills, Work Experience, Education, Certifications, Languages, or References: {line}"}
+                {"role": "system", "content": "You are an expert in parsing CVs into structured sections."},
+                {"role": "user", "content": f"Given the current section is '{current_section}' and the previous content was: '{previous_content}', classify this line: '{line}'"}
             ],
             temperature=0
         )
@@ -47,47 +53,48 @@ def chunk_cv_with_spacy(file_path):
     # Load the spaCy language model
     nlp = spacy.load("en_core_web_sm")
 
-    # Extract text from the PDF
-    text = extract_text_from_pdf(file_path)
-
-    # Preprocess text: remove extra spaces and normalize line breaks
-    text = " ".join(text.split())
+    # Extract and preprocess text from the PDF
+    raw_text = extract_text_from_pdf(file_path)
+    text = preprocess_text(raw_text)
 
     # NLP-based section detection
     section_keywords = {
-        "Personal Information": ["personal information", "contact", "about me"],
-        "Summary": ["summary", "overview", "objective"],
-        "Skills": ["skills", "technical skills", "soft skills"],
-        "Work Experience": ["work experience", "experience", "employment history"],
-        "Education": ["education", "academic background", "qualifications"],
-        "Certifications": ["certifications", "training", "courses"],
-        "Languages": ["languages", "language proficiency"],
-        "References": ["references", "referees"],
+        "Personal Information": ["personal information", "contact", "contact details", "about me"],
+        "Skills": ["skills", "technical skills", "professional skills", "expertise"],
+        "Work Experience": ["work experience", "professional experience", "employment history", "career history"],
+        "Education": ["education", "academic background", "qualifications", "degrees"],
+        "Certifications": ["certifications", "training", "courses", "licenses"],
+        "Languages": ["languages", "language proficiency", "spoken languages"],
+        "References": ["references", "referees", "recommendations"],
+        "Summary": ["summary", "overview", "profile", "objective"],
         "Interests": ["interests", "hobbies", "extracurricular activities"]
     }
 
     sections = {}
     current_section = "General"  # Default section if no header is detected
     sections[current_section] = ""
+    previous_content = ""  # Track previous lines for GPT context
 
-    # Process text line by line
     for line in text.split(". "):  # Split text into sentences/lines
         line_lower = line.lower()
 
-        # Check if the line matches any section keywords
+        # Match section using keywords
         matched_section = detect_section(line, section_keywords)
 
-        if matched_section:
-            current_section = matched_section
-            sections[current_section] = sections.get(current_section, "")
+        # Use GPT if no match
+        if not matched_section:
+            refined_section = refine_with_gpt(current_section, line, previous_content)
         else:
-            # Use GPT for classification when no match is found
-            refined_section = refine_with_gpt(current_section, line)
-            if refined_section != current_section:
-                current_section = refined_section
-                sections[current_section] = sections.get(current_section, "")
-            else:
-                sections[current_section] += " " + line
+            refined_section = matched_section
+
+        # If the section changes, start a new one
+        if refined_section != current_section:
+            current_section = refined_section
+            sections[current_section] = sections.get(current_section, "")
+
+        # Append the line to the current section
+        sections[current_section] += " " + line
+        previous_content = line  # Update previous content
 
     # Remove extra spaces in sections
     for section in sections:
