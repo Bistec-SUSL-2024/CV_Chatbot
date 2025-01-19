@@ -9,6 +9,7 @@ import openai
 # Set your OpenAI API key
 openai.api_key = os.getenv("openaiKEY")
 
+
 def extract_text_from_pdf(file_path):
     """Extract text from a single PDF using pdfplumber."""
     with pdfplumber.open(file_path) as pdf:
