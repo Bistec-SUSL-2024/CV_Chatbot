@@ -3,7 +3,7 @@ import io
 import re
 from dotenv import load_dotenv
 from PyPDF2 import PdfReader
-import mar
+import markdownify
 from llama_index.embeddings.openai import OpenAIEmbedding
 from pinecone import Pinecone, ServerlessSpec
 from llama_index.vector_stores.pinecone import PineconeVectorStore

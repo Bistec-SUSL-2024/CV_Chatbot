@@ -193,10 +193,14 @@ def extract_skills_and_experience(full_text):
 
 
         prompt = f"""
+
+        Given the following full_text,
+        - Job_Title (remove Just get the title. remove words like junior, senior and etc. Ex: If prompt say senior engineer, remove senior word and just extract engineer.)
+
         Given the following full_text, extract the following details ONLY from the 'skills' section:
         - Skills (technologies, programming languages, etc)
          
-        Given the following full_text, extract the following details ONLY from the 'experience' section:
+        Given the following full_text, extract the following details:
         - Identify date ranges for job experience in the format 'YYYY-MM to YYYY-MM' or similar. 
         - If no end date is provided, assume it is the current date.
         - Calculate the total years of experience from these date ranges and provide it as an integer.
@@ -205,7 +209,8 @@ def extract_skills_and_experience(full_text):
         
 
         Ensure the output format is:
-        {{
+        {{  
+            'job_title': <job_title>,
             'years_of_experience': <integer>,
             'skills': ['<skill1>', '<skill2>', ...],
         }}
@@ -231,6 +236,7 @@ def extract_skills_and_experience(full_text):
         if not response_message.startswith("{") or not response_message.endswith("}"):
             print("Invalid response format:", response_message)
             return {
+                'job_title': [],
                 'years_of_experience': 0,
                 'skills': []
             }
@@ -247,6 +253,7 @@ def extract_skills_and_experience(full_text):
 
         # Prepare the structured output
         extracted_info = {
+            'job_title': user_conditions.get('job_title', []),
             'years_of_experience': int(user_conditions.get('years_of_experience', 0)),
             'skills': user_conditions.get('skills', [])
         }
@@ -259,6 +266,7 @@ def extract_skills_and_experience(full_text):
     except Exception as e:
         print(f"Error extracting skills and experience: {e}")
         return {
+            'job_title': [],
             'years_of_experience': 0,
             'skills': []
         }
@@ -275,6 +283,7 @@ def extract_mandatory_conditions(job_description):
         
         prompt = f"""
         Given the following job description, extract the mandatory conditions:
+        - Job title
         - Years of experience(If years of experience not included in users prompt set it as 0)
         - Skills (technologies, programming languages, etc. If skills are not mentioned in user prompt set it as [])
         - Certifications (if any)
@@ -285,10 +294,12 @@ def extract_mandatory_conditions(job_description):
 
         Output format:
         {{
+            'job_title' : <job_title>,
             'years_of_experience': <years>,
             'skills': ['<skill1>', '<skill2>', ...],
             'certifications': ['<certification1>', '<certification2>', ...],
-            'tools': ['<tool1>', '<tool2>', ...]
+            'tools': ['<tool1>', '<tool2>', ...],
+
         }}
         """
 
@@ -305,6 +316,7 @@ def extract_mandatory_conditions(job_description):
         mandatory_conditions = ast.literal_eval(response_message)
 
         mandatory_conditions = {
+            'job_title': mandatory_conditions.get('job_title', []),
             'years_of_experience': mandatory_conditions.get('years_of_experience', None),
             'skills': mandatory_conditions.get('skills', []),
             'certifications': mandatory_conditions.get('certifications', []),
@@ -312,7 +324,7 @@ def extract_mandatory_conditions(job_description):
         }
 
         key_words_for_search = list(mandatory_conditions.values())
-        flattened_list = [key_words_for_search[0]] + [skill for sublist in key_words_for_search[1:] for skill in sublist]
+        flattened_list = [key_words_for_search[0]] + [key_words_for_search[1]]+ [skill for sublist in key_words_for_search[2:] for skill in sublist]
         print(f"Mandatory keywords : {mandatory_conditions}")
         
         return mandatory_conditions, flattened_list
@@ -320,6 +332,7 @@ def extract_mandatory_conditions(job_description):
     except Exception as e:
         print(f"Error extracting mandatory conditions with LLM: {e}")
         return {
+            'job_title': [],
             'years_of_experience': None,
             'skills': [],
             'certifications': [],
@@ -340,10 +353,22 @@ def validate_cv(extracted_info_from_user, mandatory_conditions):
         return " ".join(input_text.strip().split()).lower()
 
     def normalize_skills(skills):
-            """
-                 Normalize a list of skills using the normalize_text function.
-            """
-            return set(normalize_text(skill) for skill in skills)
+        """
+             Normalize a list of skills using the normalize_text function.
+        """
+        return set(normalize_text(skill) for skill in skills)
+    
+
+    # check job_title------------------------
+
+    required_job_title = set(mandatory_conditions.get('job_title', []))
+    required_job_title = normalize_text(mandatory_conditions.get('job_title', []))
+    if required_job_title:
+        cv_job_title = set(extracted_info_from_user.get('job_title', []))
+        cv_job_title = normalize_text(extracted_info_from_user.get('job_title', []))
+        if not (required_job_title in cv_job_title):
+            print("No matching job titles....")
+            return False
    
     # Check years of experience--------------
 
@@ -356,7 +381,8 @@ def validate_cv(extracted_info_from_user, mandatory_conditions):
         
         print(f"CV Experience: {cv_experience}")
         
-        if cv_experience < int(required_experience):  
+        if cv_experience < int(required_experience):
+            print("Experience isn't enough....")  
             return False
 
     # Check required skills-------------------
@@ -366,7 +392,6 @@ def validate_cv(extracted_info_from_user, mandatory_conditions):
     if required_skills:
         cv_skills = set(extracted_info_from_user.get('skills', []))
         cv_skills = normalize_skills(extracted_info_from_user.get('skills', []))
-        # print(f"CV Skills: {cv_skills}")
         if not required_skills & cv_skills:
             print("No matching skills....")
             return False
@@ -582,7 +607,7 @@ def show_cv(cv_id):
 
 if __name__ == "__main__":
     
-   user_input_job_description = """I have a job vacancy for an Accountant. experience at least 5 years.
+   user_input_job_description = """I have a job vacancy for a maintenance technician. experience at least 1 years.
     """
    
    examples, instructions = retrieve_examples_and_instructions(user_input_job_description)

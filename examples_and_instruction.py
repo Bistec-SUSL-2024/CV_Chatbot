@@ -36,6 +36,16 @@ embed_model = OpenAIEmbedding()
 
 examples = [
     {
+        "job_description": "I need a senior maintenance technician.",
+        "mandatory_keywords": ['maintenance technician'],
+        "output_format": "We are currently looking for a maintenance techinician."
+    },
+    {
+        "job_description": "I have a job opportunity for a Lecturer.",
+        "mandatory_keywords": ['Lecturer'],
+        "output_format": "We are currently looking for a Lecturer"
+    },
+    {
         "job_description": "We need a Software Engineer with 3+ years of experience in Python and Django. Must have knowledge of REST APIs and familiarity with PostgreSQL. Candidates without these skills will not be considered.",
         "mandatory_keywords": ['software engineer', '3+ years', 'python', 'django', 'rest apis', 'postgresql'],
         "output_format": "We are currently looking for a Software Engineer with 3+ years of experience in Python and Django. Candidates must demonstrate proficiency in developing REST APIs and using PostgreSQL. Applicants without these skills will not be considered."
@@ -82,20 +92,24 @@ examples = [
 instructions = """
 Refine the following job description to:
 
-1. Improve specificity by:
+1. If user does not provide any specific skills, do not add any skills to refine prompt.
+
+2. Improve specificity by:
    - Highlighting the key responsibilities of the role.
    - Clearly emphasizing the mandatory skills and experience.
 
-2. Ensure alignment with required qualifications:
+3. Ensure alignment with required qualifications:
    - Extract the **job role**, **years of experience**, **core technologies or skills**, and **certifications**.
    - Explicitly state any conditions under which candidates will be excluded.
 
-3. Follow this format:
+4. Follow this format:
    - Start with a summary of the job position (e.g., "We are seeking a [Job Role] with [Years of Experience].").
    - List the mandatory skills and qualifications in a single sentence.
    - Conclude with an exclusion statement (e.g., "Applicants without these qualifications will not be considered.").
 
-4. Use consistent tone and language. Avoid adding details unless explicitly stated in the input.
+5. Use consistent tone and language. Avoid adding details unless explicitly stated in the input.
+
+
 
 
 Mandatory Keywords to Extract:
