@@ -2,27 +2,35 @@ import os
 import spacy
 import pdfplumber
 import json
-import pinecone
 import re
 from rapidfuzz import fuzz
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
+from pinecone import Pinecone, ServerlessSpec
 
 # Load environment variables from .env file
 load_dotenv()
 
-# Initialize Pinecone using the API key and environment loaded from .env file
-pinecone_api_key = os.getenv("PINECONE_API_KEY")
+# Initialize Pinecone using the new way
+pinecone_api_key = os.getenv("pineconeAPI")
 pinecone_environment = os.getenv("PINECONE_ENVIRONMENT")
 
-# Initialize Pinecone with the environment variables
-pinecone.init(api_key=pinecone_api_key, environment=pinecone_environment)
+# Create Pinecone client
+pc = Pinecone(api_key=pinecone_api_key, environment=pinecone_environment)
 
 # Create a Pinecone index if it doesn't exist
-index_name = "cv-chunks"
-if index_name not in pinecone.list_indexes():
-    pinecone.create_index(index_name, dimension=768)  # dimension should match your embedding model
-index = pinecone.Index(index_name)
+index_name = "test-3"
+if index_name not in pc.list_indexes().names():
+    pc.create_index(
+        name=index_name,
+        dimension=768,  # dimension should match your embedding model
+        metric='cosine',  # you can choose other metrics like 'euclidean'
+        spec=ServerlessSpec(
+            cloud='aws',
+            region='us-west-2'  # Change this as per your desired region
+        )
+    )
+index = pc.Index(index_name)  # Access the created index
 
 # Load the sentence transformer model for embedding generation
 embedding_model = SentenceTransformer('all-MiniLM-L6-v2')  # or any other model you'd like
