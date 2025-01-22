@@ -5,9 +5,17 @@ import json
 import pinecone
 from rapidfuzz import fuzz
 from sentence_transformers import SentenceTransformer
+from dotenv import load_dotenv
 
-# Initialize Pinecone
-pinecone.init(api_key="your-pinecone-api-key", environment="us-west1-gcp")  # Replace with your actual API key
+# Load environment variables from .env file
+load_dotenv()
+
+# Initialize Pinecone using the API key and environment loaded from .env file
+pinecone_api_key = os.getenv("PINECONE_API_KEY")
+pinecone_environment = os.getenv("PINECONE_ENVIRONMENT")
+
+# Initialize Pinecone with the environment variables
+pinecone.init(api_key=pinecone_api_key, environment=pinecone_environment)
 
 # Create a Pinecone index if it doesn't exist
 index_name = "cv-chunks"
