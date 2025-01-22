@@ -3,6 +3,7 @@ import spacy
 import pdfplumber
 import json
 import pinecone
+import re
 from rapidfuzz import fuzz
 from sentence_transformers import SentenceTransformer
 from dotenv import load_dotenv
