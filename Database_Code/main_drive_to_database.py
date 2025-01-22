@@ -8,14 +8,17 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from pinecone import Pinecone, ServerlessSpec
 from llama_index.vector_stores.pinecone import PineconeVectorStore
 from llama_index.core.schema import Node
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseUpload
 
 #------------------------------------------------ Load environment variables---------------------------------------------------------------------------------
 
 load_dotenv()
 
-OpenAI_Key = os.getenv("Open_ai_key")
-Pinecone_API_Key = os.getenv("PINECONE_API")
-SERVICE_ACCOUNT_FILE = os.getenv("Service_Account_Path")      #------add the path to the service account file--------------------------------------------
+OpenAI_Key = os.getenv("OpenAI_Key")
+Pinecone_API_Key = os.getenv("PINECONE_API_KEY")
+SERVICE_ACCOUNT_FILE = os.getenv("Service_AP")      #------add the path to the service account file--------------------------------------------
 
 os.environ["OPENAI_API_KEY"] = OpenAI_Key
 os.environ["PINECONE_API_KEY"] = Pinecone_API_Key
@@ -27,7 +30,7 @@ credentials = service_account.Credentials.from_service_account_file(
 drive_service = build('drive', 'v3', credentials=credentials)
 
 pc = Pinecone(api_key=Pinecone_API_Key)
-index_name = "test-3"
+index_name = "test-tt"
 embedding_dimension = 1536
 
 if index_name not in pc.list_indexes().names():
@@ -40,8 +43,8 @@ if index_name not in pc.list_indexes().names():
 pinecone_index = pc.Index(index_name)
 embed_model = OpenAIEmbedding()
 
-SOURCE_FOLDER_ID = '1pd3FKMd-3Vm7hESaerxAyGzoOJa7LxZX'  # CV_Storage
-TARGET_FOLDER_ID = '19-gSAcIxRTe6u5r6jv0HyUSGAkgilKgS'  # Markdown_Cvs
+SOURCE_FOLDER_ID = os.getenv("CV_storage")  # CV_Storage
+TARGET_FOLDER_ID = os.getenv("Md_CV_Storage")  # Markdown_Cvs
 
 
 def normalize_doc_id(doc_id):

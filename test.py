@@ -11,6 +11,9 @@ from openai import OpenAI
 from rank_bm25 import BM25Okapi
 import re
 import ast
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
+from google.oauth2 import service_account
 
 
 load_dotenv()
@@ -20,6 +23,16 @@ PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
+
+SERVICE_ACCOUNT_FILE = os.getenv("Service_AP")      #------add the path to the service account file--------------------------------------------
+
+SCOPES = ['https://www.googleapis.com/auth/drive']
+credentials = service_account.Credentials.from_service_account_file(
+    SERVICE_ACCOUNT_FILE, scopes=SCOPES
+)
+drive_service = build('drive', 'v3', credentials=credentials)
+
+SOURCE_FOLDER_ID = os.getenv("CV_storage")
 
 
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -568,40 +581,137 @@ def normalize_string(s):
 
 #--------------------------------------------------Show CV Function-----------------------------------------------------
 
+# def show_cv(cv_id):
+#     print(f"Searching for the original CV with ID '{cv_id}'...")
+
+#     normalized_cv_id = normalize_string(cv_id)
+
+#     data_folder = Path("./data")
+    
+#     if not data_folder.exists():
+#         print("Error: 'data' folder does not exist.")
+#         return {"success": False, "message": "Data folder does not exist."}
+  
+#     pdf_files = list(data_folder.glob("*.pdf"))
+
+#     normalized_filenames = [(normalize_string(file.stem), file) for file in pdf_files]
+
+#     best_match = process.extractOne(normalized_cv_id, [filename[0] for filename in normalized_filenames])
+
+#     if best_match and best_match[1] >= 80: 
+#         matched_file = next(file for name, file in normalized_filenames if normalize_string(file.stem) == best_match[0])
+        
+#         print(f"Found CV: {matched_file}")
+        
+#         try:
+#             webbrowser.open(matched_file.resolve().as_uri())
+#             print(f"Opening CV '{matched_file.name}'...")
+
+#             return {"success": True, "message": f"Opened CV '{matched_file.name}' successfully."}
+        
+#         except Exception as e:
+#             print(f"Error opening CV PDF: {e}")
+#             return {"success": False, "message": f"Error opening CV: {e}"}
+    
+#     else:
+#         print(f"No matching CV PDF found for ID '{cv_id}'.")
+
+# def show_cv(cv_id):
+#     print(f"Searching for the original CV with ID '{cv_id}'...")
+
+#     normalized_cv_id = normalize_string(cv_id)
+
+#     try:
+#         # Search for files in the Google Drive folder
+#         query = f"'{SOURCE_FOLDER_ID}' in parents and mimeType='application/pdf'"
+#         results = drive_service.files().list(q=query, fields="files(id, name)").execute()
+#         files = results.get('files', [])
+
+#         if not files:
+#             print("Error: No files found in the Google Drive folder.")
+#             return {"success": False, "message": "No files found in the Google Drive folder."}
+
+#         normalized_filenames = [(normalize_string(file['name'].rsplit('.', 1)[0]), file) for file in files]
+
+#         best_match = process.extractOne(normalized_cv_id, [filename[0] for filename in normalized_filenames])
+
+#         if best_match and best_match[1] >= 80:
+#             matched_file = next(file for name, file in normalized_filenames if name == best_match[0])
+
+#             file_id = matched_file['id']
+#             file_name = matched_file['name']
+
+#             print(f"Found CV: {file_name}")
+
+#             # Download the file locally
+#             request = drive_service.files().get_media(fileId=file_id)
+#             local_path = Path(f"./downloads/{file_name}")
+#             local_path.parent.mkdir(parents=True, exist_ok=True)
+
+#             with open(local_path, 'wb') as f:
+#                 downloader = MediaIoBaseDownload(f, request)
+#                 done = False
+#                 while not done:
+#                     status, done = downloader.next_chunk()
+#                     print(f"Download {int(status.progress() * 100)}%.")
+
+#             print(f"File downloaded to: {local_path}")
+#             webbrowser.open(local_path.resolve().as_uri())
+#             print(f"Opening CV '{file_name}'...")
+
+#             return {"success": True, "message": f"Opened CV '{file_name}' successfully."}
+
+#         else:
+#             print(f"No matching CV PDF found for ID '{cv_id}'.")
+#             return {"success": False, "message": f"No matching CV PDF found for ID '{cv_id}'."}
+
+#     except Exception as e:
+#         print(f"Error accessing Google Drive or processing files: {e}")
+#         return {"success": False, "message": f"Error accessing Google Drive: {e}"}
+
+
 def show_cv(cv_id):
     print(f"Searching for the original CV with ID '{cv_id}'...")
 
     normalized_cv_id = normalize_string(cv_id)
 
-    data_folder = Path("./data")
-    
-    if not data_folder.exists():
-        print("Error: 'data' folder does not exist.")
-        return {"success": False, "message": "Data folder does not exist."}
-  
-    pdf_files = list(data_folder.glob("*.pdf"))
+    try:
+        # Search for files in the Google Drive folder
+        query = f"'{SOURCE_FOLDER_ID}' in parents and mimeType='application/pdf'"
+        results = drive_service.files().list(
+            q=query, fields="files(id, name, webViewLink)"
+        ).execute()
+        files = results.get('files', [])
 
-    normalized_filenames = [(normalize_string(file.stem), file) for file in pdf_files]
+        if not files:
+            print("Error: No files found in the Google Drive folder.")
+            return {"success": False, "message": "No files found in the Google Drive folder."}
 
-    best_match = process.extractOne(normalized_cv_id, [filename[0] for filename in normalized_filenames])
+        normalized_filenames = [(normalize_string(file['name'].rsplit('.', 1)[0]), file) for file in files]
 
-    if best_match and best_match[1] >= 80: 
-        matched_file = next(file for name, file in normalized_filenames if normalize_string(file.stem) == best_match[0])
-        
-        print(f"Found CV: {matched_file}")
-        
-        try:
-            webbrowser.open(matched_file.resolve().as_uri())
-            print(f"Opening CV '{matched_file.name}'...")
+        best_match = process.extractOne(normalized_cv_id, [filename[0] for filename in normalized_filenames])
 
-            return {"success": True, "message": f"Opened CV '{matched_file.name}' successfully."}
-        
-        except Exception as e:
-            print(f"Error opening CV PDF: {e}")
-            return {"success": False, "message": f"Error opening CV: {e}"}
-    
-    else:
-        print(f"No matching CV PDF found for ID '{cv_id}'.")
+        if best_match and best_match[1] >= 80:
+            matched_file = next(file for name, file in normalized_filenames if name == best_match[0])
+
+            file_name = matched_file['name']
+            web_view_link = matched_file['webViewLink']
+
+            print(f"Found CV: {file_name}")
+            print(f"Opening CV '{file_name}' in browser...")
+
+            # Open the file in the default web browser
+            webbrowser.open(web_view_link)
+
+            return {"success": True, "message": f"Opened CV '{file_name}' successfully in the browser."}
+
+        else:
+            print(f"No matching CV PDF found for ID '{cv_id}'.")
+            return {"success": False, "message": f"No matching CV PDF found for ID '{cv_id}'."}
+
+    except Exception as e:
+        print(f"Error accessing Google Drive or processing files: {e}")
+        return {"success": False, "message": f"Error accessing Google Drive: {e}"}
         
 #-------------------------------------------------Main Section------------------------------------------------------
 

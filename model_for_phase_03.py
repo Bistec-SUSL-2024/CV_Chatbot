@@ -1,5 +1,7 @@
 import os
 import webbrowser
+import re
+import ast
 from pathlib import Path
 from dotenv import load_dotenv
 from llama_index.embeddings.openai import OpenAIEmbedding
@@ -9,9 +11,10 @@ from pinecone import Pinecone
 from fuzzywuzzy import process
 from openai import OpenAI
 from rank_bm25 import BM25Okapi
-import re
-import ast
-import json
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaIoBaseDownload
+from google.oauth2 import service_account
+
 
 load_dotenv()
 
@@ -20,6 +23,16 @@ PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 
 os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
 os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
+
+SERVICE_ACCOUNT_FILE = os.getenv("Service_AP")      #------add the path to the service account file------------
+
+SCOPES = ['https://www.googleapis.com/auth/drive']
+credentials = service_account.Credentials.from_service_account_file(
+    SERVICE_ACCOUNT_FILE, scopes=SCOPES
+)
+drive_service = build('drive', 'v3', credentials=credentials)
+
+SOURCE_FOLDER_ID = os.getenv("CV_storage")
 
 
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -175,22 +188,42 @@ def refine_user_prompt_with_llm(user_input, examples, instructions):
 #----------------------------------------Function for extract_skills_and_experience From CVS----------------------------------------------------
 
 def extract_skills_and_experience(full_text):
-    try:
-        # Adjust the prompt to focus on extracting information only from the working experience section
-        prompt = f"""
-        Given the following full_text, extract the following details ONLY from the 'skills' section:
-        -Skills (technologies, programming languages, etc)
-         
+    """
+    Extract structured data (skills and years of experience) from the full_text section of a CV.
+    Includes caching to prevent re-processing the same input.
+    """
+    def normalize_text_2(input_text):
+        """
+        Normalize text by removing extra spaces, converting to lowercase, and ensuring consistency.
+        """
+        return " ".join(input_text.strip().split()).lower()
 
-        Given the following full_text, extract the following details ONLY from the 'experience' section:
+    try:
+        normalized_text_2 = normalize_text_2(full_text)
+
+        if normalized_text_2 in cache:
+            return cache[normalized_text_2]
+
+
+        prompt = f"""
+
+        Given the following full_text,
+        - Job_Title (remove Just get the title. remove words like junior, senior and etc. Ex: If prompt say senior engineer, remove senior word and just extract engineer.)
+
+        Given the following full_text, extract the following details ONLY from the 'skills' section:
+        - Skills (technologies, programming languages, etc)
+         
+        Given the following full_text, extract the following details:
         - Identify date ranges for job experience in the format 'YYYY-MM to YYYY-MM' or similar. 
         - If no end date is provided, assume it is the current date.
         - Calculate the total years of experience from these date ranges and provide it as an integer.
        
         Please ignore other sections like education or personal information when calculating total years of experience. 
+        
 
         Ensure the output format is:
-        {{
+        {{  
+            'job_title': <job_title>,
             'years_of_experience': <integer>,
             'skills': ['<skill1>', '<skill2>', ...],
         }}
@@ -200,9 +233,9 @@ def extract_skills_and_experience(full_text):
         """
 
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo", 
+            model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": "You are an assistant that extracts structured data from CV text, focusing only on work experience."},
+                {"role": "system", "content": "You are an assistant that extracts structured data from CV text."},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=300,
@@ -211,33 +244,45 @@ def extract_skills_and_experience(full_text):
         )
 
         response_message = response.choices[0].message.content.strip()
-        
-        # Ensure the response is in a valid format before processing
+
+        # Validate response format
+        if not response_message.startswith("{") or not response_message.endswith("}"):
+            print("Invalid response format:", response_message)
+            return {
+                'job_title': [],
+                'years_of_experience': 0,
+                'skills': []
+            }
+
+        # Parse response safely
         try:
             user_conditions = ast.literal_eval(response_message)
-        except (ValueError, SyntaxError) as e:
+        except (SyntaxError, ValueError) as e:
             print(f"Error parsing response: {e}")
-            user_conditions = {}
+            return {
+                'years_of_experience': 0,
+                'skills': []
+            }
 
-        # Convert extracted years_of_experience to int and ensure robust handling
+        # Prepare the structured output
         extracted_info = {
+            'job_title': user_conditions.get('job_title', []),
             'years_of_experience': int(user_conditions.get('years_of_experience', 0)),
-            'skills': user_conditions.get('skills', []),
-            # 'certifications': user_conditions.get('certifications', []),
-            # 'tools': user_conditions.get('tools', [])
+            'skills': user_conditions.get('skills', [])
         }
+
+        # Save the result in cache
+        cache[normalized_text_2] = extracted_info
 
         return extracted_info
 
     except Exception as e:
         print(f"Error extracting skills and experience: {e}")
         return {
+            'job_title': [],
             'years_of_experience': 0,
-            'skills': [],
-            # 'certifications': [],
-            # 'tools': []
+            'skills': []
         }
-
 
 
 #-------------------------------------------------Extract Mandatory Keywords------------------------------------------------
@@ -251,8 +296,9 @@ def extract_mandatory_conditions(job_description):
         
         prompt = f"""
         Given the following job description, extract the mandatory conditions:
-        - Years of experience
-        - Skills (technologies, programming languages, etc.)
+        - Job title
+        - Years of experience(If years of experience not included in users prompt set it as 0)
+        - Skills (technologies, programming languages, etc. If skills are not mentioned in user prompt set it as [])
         - Certifications (if any)
         - Tools (if any)
 
@@ -261,10 +307,12 @@ def extract_mandatory_conditions(job_description):
 
         Output format:
         {{
+            'job_title' : <job_title>,
             'years_of_experience': <years>,
             'skills': ['<skill1>', '<skill2>', ...],
             'certifications': ['<certification1>', '<certification2>', ...],
-            'tools': ['<tool1>', '<tool2>', ...]
+            'tools': ['<tool1>', '<tool2>', ...],
+
         }}
         """
 
@@ -281,6 +329,7 @@ def extract_mandatory_conditions(job_description):
         mandatory_conditions = ast.literal_eval(response_message)
 
         mandatory_conditions = {
+            'job_title': mandatory_conditions.get('job_title', []),
             'years_of_experience': mandatory_conditions.get('years_of_experience', None),
             'skills': mandatory_conditions.get('skills', []),
             'certifications': mandatory_conditions.get('certifications', []),
@@ -288,7 +337,7 @@ def extract_mandatory_conditions(job_description):
         }
 
         key_words_for_search = list(mandatory_conditions.values())
-        flattened_list = [key_words_for_search[0]] + [skill for sublist in key_words_for_search[1:] for skill in sublist]
+        flattened_list = [key_words_for_search[0]] + [key_words_for_search[1]]+ [skill for sublist in key_words_for_search[2:] for skill in sublist]
         print(f"Mandatory keywords : {mandatory_conditions}")
         
         return mandatory_conditions, flattened_list
@@ -296,6 +345,7 @@ def extract_mandatory_conditions(job_description):
     except Exception as e:
         print(f"Error extracting mandatory conditions with LLM: {e}")
         return {
+            'job_title': [],
             'years_of_experience': None,
             'skills': [],
             'certifications': [],
@@ -316,10 +366,22 @@ def validate_cv(extracted_info_from_user, mandatory_conditions):
         return " ".join(input_text.strip().split()).lower()
 
     def normalize_skills(skills):
-            """
-                 Normalize a list of skills using the normalize_text function.
-            """
-            return set(normalize_text(skill) for skill in skills)
+        """
+             Normalize a list of skills using the normalize_text function.
+        """
+        return set(normalize_text(skill) for skill in skills)
+    
+
+    # check job_title------------------------
+
+    required_job_title = set(mandatory_conditions.get('job_title', []))
+    required_job_title = normalize_text(mandatory_conditions.get('job_title', []))
+    if required_job_title:
+        cv_job_title = set(extracted_info_from_user.get('job_title', []))
+        cv_job_title = normalize_text(extracted_info_from_user.get('job_title', []))
+        if not (required_job_title in cv_job_title):
+            print("No matching job titles....")
+            return False
    
     # Check years of experience--------------
 
@@ -332,7 +394,8 @@ def validate_cv(extracted_info_from_user, mandatory_conditions):
         
         print(f"CV Experience: {cv_experience}")
         
-        if cv_experience < int(required_experience):  
+        if cv_experience < int(required_experience):
+            print("Experience isn't enough....")  
             return False
 
     # Check required skills-------------------
@@ -342,7 +405,6 @@ def validate_cv(extracted_info_from_user, mandatory_conditions):
     if required_skills:
         cv_skills = set(extracted_info_from_user.get('skills', []))
         cv_skills = normalize_skills(extracted_info_from_user.get('skills', []))
-        # print(f"CV Skills: {cv_skills}")
         if not required_skills & cv_skills:
             print("No matching skills....")
             return False
@@ -377,19 +439,18 @@ def rank_and_validate_cvs(refined_job_description, mandatory_conditions, mandato
     print("Ranking CVs based on refined job description...")
 
 
-        # Convert all items in the list to strings
+    # Convert all items in the list to strings
     query_texts = [str(item) for item in mandatory_keywords]
 
-        # Generate the sparse vector for the query keywords
     query_sparse_vector, idf_keys = generate_bm25_sparse_vector(query_texts)
 
     if query_sparse_vector is None:
         raise ValueError("Failed to generate sparse vectors for the query.")
 
-        # Use the first sparse vector from the query
+    # Use the first sparse vector from the query
     query_vector = query_sparse_vector[0]
 
-        # Convert the NumPy array to a Python list for Pinecone
+    # Convert the NumPy array to a Python list for Pinecone
     query_sparse = {
             "indices": list(range(len(query_vector))),
             "values": query_vector.tolist()  # Convert ndarray to list
@@ -524,42 +585,50 @@ def show_cv(cv_id):
 
     normalized_cv_id = normalize_string(cv_id)
 
-    data_folder = Path("./data")
-    
-    if not data_folder.exists():
-        print("Error: 'data' folder does not exist.")
-        return {"success": False, "message": "Data folder does not exist."}
-  
-    pdf_files = list(data_folder.glob("*.pdf"))
+    try:
+        # Search for files in the Google Drive folder
+        query = f"'{SOURCE_FOLDER_ID}' in parents and mimeType='application/pdf'"
+        results = drive_service.files().list(
+            q=query, fields="files(id, name, webViewLink)"
+        ).execute()
+        files = results.get('files', [])
 
-    normalized_filenames = [(normalize_string(file.stem), file) for file in pdf_files]
+        if not files:
+            print("Error: No files found in the Google Drive folder.")
+            return {"success": False, "message": "No files found in the Google Drive folder."}
 
-    best_match = process.extractOne(normalized_cv_id, [filename[0] for filename in normalized_filenames])
+        normalized_filenames = [(normalize_string(file['name'].rsplit('.', 1)[0]), file) for file in files]
 
-    if best_match and best_match[1] >= 80: 
-        matched_file = next(file for name, file in normalized_filenames if normalize_string(file.stem) == best_match[0])
-        
-        print(f"Found CV: {matched_file}")
-        
-        try:
-            webbrowser.open(matched_file.resolve().as_uri())
-            print(f"Opening CV '{matched_file.name}'...")
+        best_match = process.extractOne(normalized_cv_id, [filename[0] for filename in normalized_filenames])
 
-            return {"success": True, "message": f"Opened CV '{matched_file.name}' successfully."}
-        
-        except Exception as e:
-            print(f"Error opening CV PDF: {e}")
-            return {"success": False, "message": f"Error opening CV: {e}"}
-    
-    else:
-        print(f"No matching CV PDF found for ID '{cv_id}'.")
+        if best_match and best_match[1] >= 80:
+            matched_file = next(file for name, file in normalized_filenames if name == best_match[0])
+
+            file_name = matched_file['name']
+            web_view_link = matched_file['webViewLink']
+
+            print(f"Found CV: {file_name}")
+            print(f"Opening CV '{file_name}' in browser...")
+
+            # Open the file in the default web browser
+            webbrowser.open(web_view_link)
+
+            return {"success": True, "message": f"Opened CV '{file_name}' successfully in the browser."}
+
+        else:
+            print(f"No matching CV PDF found for ID '{cv_id}'.")
+            return {"success": False, "message": f"No matching CV PDF found for ID '{cv_id}'."}
+
+    except Exception as e:
+        print(f"Error accessing Google Drive or processing files: {e}")
+        return {"success": False, "message": f"Error accessing Google Drive: {e}"}
         
 #-------------------------------------------------Main Section------------------------------------------------------
 
 if __name__ == "__main__":
     
-   user_input_job_description = """I have a job vacancy for software engineer.
-    Experience required least 3 years. must have experience with python and django."""
+   user_input_job_description = """I have a job vacancy for a maintenance technician. experience at least 1 years.
+    """
    
    examples, instructions = retrieve_examples_and_instructions(user_input_job_description)
 
