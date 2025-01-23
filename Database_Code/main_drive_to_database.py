@@ -43,8 +43,8 @@ if index_name not in pc.list_indexes().names():
 pinecone_index = pc.Index(index_name)
 embed_model = OpenAIEmbedding()
 
-SOURCE_FOLDER_ID = '1pd3FKMd-3Vm7hESaerxAyGzoOJa7LxZX'  # CV_Storage
-TARGET_FOLDER_ID = '19-gSAcIxRTe6u5r6jv0HyUSGAkgilKgS'  # Markdown_Cvs
+SOURCE_FOLDER_ID = '1Gqesn2YyZUo2qTEOEQdzMpYIwCKi0lTJ?dmr=1&ec=wgc-drive-hero-goto'  # CV_Storage
+TARGET_FOLDER_ID = '1p1Hh6fMSEfktVJv14VdQn8cz1GcahlJx?dmr=1&ec=wgc-drive-hero-goto'  # Markdown_Cvs
 
 
 def normalize_doc_id(doc_id):
