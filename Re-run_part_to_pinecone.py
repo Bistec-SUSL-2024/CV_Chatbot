@@ -12,12 +12,14 @@ from llama_index.embeddings.openai import OpenAIEmbedding
 from pinecone import Pinecone, ServerlessSpec
 from llama_index.vector_stores.pinecone import PineconeVectorStore
 from llama_index.core.schema import Node
+from rank_bm25 import BM25Okapi
+import numpy as np
 
 # ------------------------------------Load Environment Variables------------------------------------------------------------------
 
 load_dotenv()
 
-SERVICE_ACCOUNT_PATH = os.getenv("SERVICE_ACCOUNT_PATH")
+SERVICE_ACCOUNT_PATH = os.getenv("SERVICE_ACCOUNT_PATH1")
 OpenAI_Key = os.getenv("Open_ai_key")
 Pinecone_API_Key = os.getenv("PINECONE_API")
 
@@ -35,14 +37,16 @@ def initialize_service():
 # --------------------------------------Initialize Pinecone API---------------------------------------------------------------------
 
 pc = Pinecone(api_key=Pinecone_API_Key)
-index_name = "test"
+index_name = "test-3"
 embedding_dimension = 1536
+
+# Create Pinecone index with dotproduct metric
 
 if index_name not in pc.list_indexes().names():
     pc.create_index(
         name=index_name,
         dimension=embedding_dimension,
-        metric="cosine",
+        metric="dotproduct", 
         spec=ServerlessSpec(cloud="aws", region="us-east-1")
     )
 pinecone_index = pc.Index(index_name)
@@ -68,6 +72,16 @@ def generate_embeddings(text):
         return embed_model.get_text_embedding(text)
     except Exception as e:
         print(f"Error generating embeddings: {e}")
+        return None
+
+def generate_bm25_sparse_vector(texts):
+    try:
+        tokenized_corpus = [text.split() for text in texts]
+        bm25 = BM25Okapi(tokenized_corpus)
+        sparse_vectors = [bm25.get_scores(doc_tokens) for doc_tokens in tokenized_corpus]
+        return sparse_vectors
+    except Exception as e:
+        print(f"Error generating BM25 sparse vectors: {e}")
         return None
 
 def convert_pdf_to_markdown(pdf_content):
@@ -126,12 +140,37 @@ def process_new_file(file_id, file_name, drive_service, target_folder_id):
             print(f"Document '{normalized_doc_id}' already exists in Pinecone. Skipping upsert.")
             return
 
+        # Generate dense and sparse vectors
+
         embeddings = generate_embeddings(markdown_content)
-        if embeddings:
-            node = Node(id_=normalized_doc_id, embedding=embeddings, metadata={"text": markdown_content})
-            vector_store = PineconeVectorStore(pinecone_index=pinecone_index)
-            vector_store.add(nodes=[node])
-            print(f"Upserted document '{normalized_doc_id}' into Pinecone.")
+        sparse_vectors = generate_bm25_sparse_vector([markdown_content])
+
+        if embeddings and sparse_vectors:
+            # Prepare sparse vector data for upsert
+
+            sparse_vector = sparse_vectors[0]  # Get the sparse vector for the current document
+            indices = np.nonzero(sparse_vector)[0]  # Non-zero indices
+            values = sparse_vector[indices]  # Non-zero values
+            sparse_data = {
+                "indices": indices.tolist(),
+                "values": values.tolist()
+            }
+
+            # Upsert the data into Pinecone with both dense and sparse vectors
+            
+            try:
+                pinecone_index.upsert(
+                    vectors=[{
+                        "id": normalized_doc_id,
+                        "values": embeddings,  # Dense vector
+                        "metadata": {"text": markdown_content},
+                        "sparse_values": sparse_data  # Sparse vector data
+                    }],
+                    namespace="cvs-info"
+                )
+                print(f"Upserted document '{normalized_doc_id}' into Pinecone.")
+            except Exception as e:
+                print(f"Error upserting vectors for document '{normalized_doc_id}': {e}")
     except Exception as e:
         print(f"Error processing file {file_name}: {e}")
 
@@ -160,6 +199,6 @@ def monitor_folder(source_folder_id, target_folder_id):
 # --------------------------------------Main--------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    SOURCE_FOLDER_ID = '1tS1F0CoeaQy3NWBaWaU8foCoStmfZ0Fv'  # CV_Storage
-    TARGET_FOLDER_ID = '1AYZuzhd9qa1gZXARx2-9zEk79runGvve'  # Markdown_Cvs
+    SOURCE_FOLDER_ID = "" # CV_Storage
+    TARGET_FOLDER_ID = ""  # Markdown_Cvs
     monitor_folder(SOURCE_FOLDER_ID, TARGET_FOLDER_ID)
