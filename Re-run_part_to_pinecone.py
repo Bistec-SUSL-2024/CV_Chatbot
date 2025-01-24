@@ -199,6 +199,6 @@ def monitor_folder(source_folder_id, target_folder_id):
 # --------------------------------------Main--------------------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    SOURCE_FOLDER_ID = "" # CV_Storage
-    TARGET_FOLDER_ID = ""  # Markdown_Cvs
+    SOURCE_FOLDER_ID = os.getenv("G-DRIVE_CV_STORE_FOLDER_ID") # CV_Storage
+    TARGET_FOLDER_ID = os.getenv("G-DRIVE_CV_MARKDOWN_FOLDER_ID")  # Markdown_Cvs
     monitor_folder(SOURCE_FOLDER_ID, TARGET_FOLDER_ID)

@@ -46,8 +46,8 @@ if index_name not in pc.list_indexes().names():
 pinecone_index = pc.Index(index_name)
 embed_model = OpenAIEmbedding()
 
-SOURCE_FOLDER_ID = ""  # Change this to your source folder ID
-TARGET_FOLDER_ID = ""  # Change this to your target folder ID
+SOURCE_FOLDER_ID = os.getenv("G-DRIVE_CV_STORE_FOLDER_ID") # Change this to your source folder ID
+TARGET_FOLDER_ID = os.getenv("G-DRIVE_CV_MARKDOWN_FOLDER_ID")  # Change this to your target folder ID
 
 # ---------------------------- Normalize document ID ----------------------------
 
