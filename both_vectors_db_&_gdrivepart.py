@@ -14,7 +14,7 @@ from llama_index.core.schema import Node
 from rank_bm25 import BM25Okapi
 import numpy as np
 
-#------------------------------------------------ Load environment variables--------------------------------------------------------------------- 
+#------------------------------------------------ Load environment variables ---------------------------------------------- 
 
 load_dotenv()
 
