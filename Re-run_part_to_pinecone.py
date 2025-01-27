@@ -10,7 +10,6 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 from llama_index.embeddings.openai import OpenAIEmbedding
 from pinecone import Pinecone, ServerlessSpec
-from llama_index.vector_stores.pinecone import PineconeVectorStore
 from llama_index.core.schema import Node
 from rank_bm25 import BM25Okapi
 import numpy as np
@@ -19,9 +18,9 @@ import numpy as np
 
 load_dotenv()
 
-SERVICE_ACCOUNT_PATH = os.getenv("SERVICE_ACCOUNT_PATH1")
-OpenAI_Key = os.getenv("Open_ai_key")
-Pinecone_API_Key = os.getenv("PINECONE_API")
+SERVICE_ACCOUNT_PATH = os.getenv("Service_AP")
+OpenAI_Key = os.getenv("OpenAI_Key")
+Pinecone_API_Key = os.getenv("PINECONE_API_KEY")
 
 os.environ["OPENAI_API_KEY"] = OpenAI_Key
 os.environ["PINECONE_API_KEY"] = Pinecone_API_Key
@@ -37,7 +36,7 @@ def initialize_service():
 # --------------------------------------Initialize Pinecone API---------------------------------------------------------------------
 
 pc = Pinecone(api_key=Pinecone_API_Key)
-index_name = "test-3"
+index_name = "database"
 embedding_dimension = 1536
 
 # Create Pinecone index with dotproduct metric

@@ -9,7 +9,6 @@ from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
 from llama_index.embeddings.openai import OpenAIEmbedding
 from pinecone import Pinecone, ServerlessSpec
-from llama_index.vector_stores.pinecone import PineconeVectorStore
 from llama_index.core.schema import Node
 from rank_bm25 import BM25Okapi
 import numpy as np
@@ -18,9 +17,9 @@ import numpy as np
 
 load_dotenv()
 
-OpenAI_Key = os.getenv("Open_ai_key")
-Pinecone_API_Key = os.getenv("PINECONE_API")
-SERVICE_ACCOUNT_FILE = os.getenv("SERVICE_ACCOUNT_PATH1")  # Add the path to the service account file
+OpenAI_Key = os.getenv("OpenAI_Key")
+Pinecone_API_Key = os.getenv("PINECONE_API_KEY")
+SERVICE_ACCOUNT_FILE = os.getenv("Service_AP")  # Add the path to the service account file
 
 os.environ["OPENAI_API_KEY"] = OpenAI_Key
 os.environ["PINECONE_API_KEY"] = Pinecone_API_Key
@@ -32,7 +31,7 @@ credentials = service_account.Credentials.from_service_account_file(
 drive_service = build('drive', 'v3', credentials=credentials)
 
 pc = Pinecone(api_key=Pinecone_API_Key)
-index_name = "test-3"
+index_name = "database"
 namespace = "cvs-info"
 embedding_dimension = 1536
 
