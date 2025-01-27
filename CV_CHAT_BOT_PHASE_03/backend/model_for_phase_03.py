@@ -32,14 +32,14 @@ credentials = service_account.Credentials.from_service_account_file(
 )
 drive_service = build('drive', 'v3', credentials=credentials)
 
-SOURCE_FOLDER_ID = os.getenv("CV_storage")
+SOURCE_FOLDER_ID = os.getenv("G-DRIVE_CV_STORE_FOLDER_ID")
 
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 embed_model = OpenAIEmbedding()
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
-index_name = "cv-analyzer-2"  
+index_name = "database"  
 namespace = "cvs-info"  
 pinecone_index = pc.Index(index_name)
 
