@@ -1,7 +1,5 @@
 import os
 import io
-import tempfile
-import chardet
 from dotenv import load_dotenv
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseDownload, MediaFileUpload
@@ -11,6 +9,8 @@ import numpy as np
 from pinecone import Pinecone, ServerlessSpec
 from pdfminer.high_level import extract_text
 import re
+import tempfile
+import chardet
 
 # Load environment variables
 load_dotenv()
@@ -164,19 +164,21 @@ else:
 
             md_fh.seek(0)
             raw_data = md_fh.read()
-
-            # Detect encoding automatically
             detected_encoding = chardet.detect(raw_data)['encoding']
+            markdown_text = raw_data.decode(detected_encoding or 'utf-8', errors='replace')
 
-            # Decode with detected or fallback encoding
-            try:
-                markdown_text = raw_data.decode(detected_encoding or 'utf-8')
-            except (UnicodeDecodeError, TypeError):
-                markdown_text = raw_data.decode('latin-1')
+            # Show extracted text in the terminal
+            print(f"\nExtracted text from {md_file_name}:\n")
+            print(markdown_text[:500], "\n... [Truncated for display]")
 
             # Extract sections and chunk them
             sections = extract_sections(markdown_text)
+            print(f"\nSections extracted from {md_file_name}:")
+            for section_name, section_content in sections.items():
+                print(f"\nSection: {section_name}\nContent Preview: {section_content[:200]}...")
+
             chunks = chunk_text_by_section(sections)
+            print(f"\nGenerated {len(chunks)} chunks for {md_file_name}.")
 
             # Upsert chunks to Pinecone
             for chunk in chunks:
