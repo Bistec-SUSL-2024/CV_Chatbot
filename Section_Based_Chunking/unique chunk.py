@@ -22,7 +22,7 @@ def detect_section(line, section_keywords):
     """
     for section, keywords in section_keywords.items():
         for keyword in keywords:
-            if fuzz.partial_ratio(line.lower(), keyword.lower()) > 80:  # Adjust threshold as needed
+            if fuzz.partial_ratio(line.lower(), keyword.lower()) > 80:  
                 return section
     return None
 
@@ -35,25 +35,25 @@ def chunk_cv_with_spacy(file_path, section_keywords):
     if not text:
         raise ValueError("No text extracted from the file.")
 
-    # Preprocess text
+   
     text = " ".join(text.split())
 
-    # Initialize sections dictionary
+ 
     sections = {}
     current_section = "General"
     sections[current_section] = []
 
-    # Process text line by line
-    for line in text.split(". "):  # Split text into sentences
+    
+    for line in text.split(". "):  
         matched_section = detect_section(line, section_keywords)
 
         if matched_section:
             current_section = matched_section
             if current_section not in sections:
-                sections[current_section] = []  # Initialize new section
+                sections[current_section] = []  
         sections[current_section].append(line)
 
-    # Clean up sections and join sentences
+   
     sections = {key: " ".join(value).strip() for key, value in sections.items()}
     return sections
 
@@ -88,14 +88,14 @@ def process_multiple_cvs(folder_path, output_json_path):
             except Exception as e:
                 print(f"Error processing {filename}: {e}")
 
-    # Save results to JSON file
+   
     with open(output_json_path, "w", encoding="utf-8") as json_file:
         json.dump(results, json_file, indent=4, ensure_ascii=False)
 
     print(f"Saved chunked CVs to {output_json_path}")
 
-# Example usage
+
 if __name__ == "__main__":
-    folder_path = r"E:\INTERN-BISTEC\CV_Chatbot\CV Store Local"  # Folder containing CVs
-    output_json_path = r"E:\INTERN-BISTEC\CV_Chatbot\chunked_cvs.json"  # Output JSON file path
+    folder_path = r"E:\INTERN-BISTEC\CV_Chatbot\CV Store Local"  
+    output_json_path = r"E:\INTERN-BISTEC\CV_Chatbot\chunked_cvs.json"  
     process_multiple_cvs(folder_path, output_json_path)

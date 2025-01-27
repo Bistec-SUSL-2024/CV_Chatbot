@@ -53,7 +53,7 @@ def chunk_cv_with_spacy(file_path, section_keywords):
     if not text:
         raise ValueError("No text extracted from the file.")
 
-    # Preprocess text
+  
     text = " ".join(text.split())
 
     # Initialize sections dictionary
