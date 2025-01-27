@@ -16,7 +16,7 @@ os.environ["PINECONE_API_KEY"] = PINECONE_API_KEY
 
 examples_namespace = "examples_and_instructions"
 pc = Pinecone(api_key=PINECONE_API_KEY)
-index_name = "cv-analyzer-2"
+index_name = "database"
 namespace = examples_namespace
 embedding_dimension = 1536
 
