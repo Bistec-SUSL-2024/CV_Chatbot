@@ -1,5 +1,4 @@
-# CV Chatbot Project: 
-
+# CV Chatbot Project: README
 Welcome to CV Chatbot, an advanced AI-powered solution designed to make CV analysis smarter, faster, and more insightful. This application doesn’t just scan resumes—it thoroughly analyzes them to extract essential information on education, skills, work experience, and more. At the same time, our built-in chatbot brings an interactive experience, allowing users to get real-time insights, ask specific questions, and receive personalized assistance on CV evaluation
 
 ---
@@ -62,26 +61,26 @@ Check it out here:
           - Ask specific questions about the selected candidate, and receive detailed responses.
             
 ### 3. Phase-3: Advanced Search and Large CV Support
-   - **Planned Enhancements**:
+   - **Key Updates**:
      - Hybrid Search:
-       - Combine vector search with keyword-based search for better accuracy.
-     - Large CV Handling:
-       - Chunk large CVs into smaller pieces for scalable storage in the Pinecone database.
+       - Combine vector search with keyword-based search for better accuracy(Using both Dense and Sparse Vectors).
+     - Add a Validation:
+       - Check whether the candidate has mandatory keywords or not.
      - Accuracy Improvements:
        - Refine algorithms to provide precise and relevant search results.
+     - Added Watcher:
+       - Add a monitoring code to run database code automatically when the system gets newcomers.
 
 ---
 
 ## 🛠️ Technology Stack
-1. **Phase-1**:
+
    - Python
    - Streamlit
-2. **Phase-2**:
    - Google Drive API
    - Markdownify
    - Pinecone Database
    - LlamaIndex
    - React
-3. **Phase-3**:
    - Advanced Pinecone capabilities
    - Hybrid search algorithms
