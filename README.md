@@ -1,13 +1,6 @@
-# CV Chatbot: AI-Powered CV Analyzer & Chat Assistant
+# CV Chatbot Project: README
 
-Welcome to CV Chatbot, an advanced AI-powered solution designed to make CV analysis smarter, faster, and more insightful. This application doesn’t just scan resumes—it thoroughly analyzes them to extract essential information on education, skills, work experience, and more. At the same time, our built-in chatbot brings an interactive experience, allowing users to get real-time insights, ask specific questions, and receive personalized assistance on CV evaluations.
-
-# 🌐 Live Demo (Phase-1)
-We’ve successfully deployed Phase-1 of CV Chatbot, which currently supports CV analysis for individual resumes.<br>
-**Check it out here:** <br>
-👉 [CV Chatbot Phase-1 Demo] (https://cv-chatbot.streamlit.app/) 👈
-In this phase, you can upload a single CV and experience the CV analysis features firsthand. Try it out to see how the tool extracts and processes key information!
-
+---
 # ✨ Features
 + **Automated CV Parsing:** Effortlessly extracts crucial information from resumes, including educational background, key skills, job experience, certifications, and even project highlights.
 + **Skill Matching:** Automatically detects relevant skills and compares them against a given job description or role requirements, ranking candidates based on skill relevance.
@@ -22,7 +15,7 @@ In this phase, you can upload a single CV and experience the CV analysis feature
 
 # 🚀 How It Works
 1. **Upload CVs:** The user uploads PDF or text-based CVs into the system.
-2. **Automated Text Extraction:** Our advanced NLP model scans each CV and extracts relevant information such as name, education, skills, work history, and notable achievements.
+2. **Create Embeddings for CVS:** Create both sparse and dense vectors using the bm25 algorithm and GPT 3.5 model. Then store it in the pinecone index.
 3. **Skill Matching and Ranking:** Each CV is analyzed for matching skills against specified job requirements. Candidates are then ranked based on how well they align with the job criteria.
 4. **Chatbot Interaction:** Users can ask the chatbot specific questions such as
   + "Who has Python and Django experience?"
@@ -34,10 +27,58 @@ In this phase, you can upload a single CV and experience the CV analysis feature
 + **Recruiters and Hiring Managers:** Use CV Chatbot to streamline the candidate selection process, identify top talent, and make data-driven hiring decisions.
 + **HR Teams:** Automate the initial CV screening phase, making it faster and less subjective.
 + **Job Seekers and Career Coaches:** Analyze a CV to identify skill gaps, improve CV structure, and ensure alignment with specific roles.
-# 🛠️ Technology Stack
-+ **AI :** Powered by llama index processing for extracting and understanding content within CVs.
-+ **Vector Database:** Stores extracted information in a structured format, allowing for quick retrieval and accurate ranking using pinecone.
-+ **Chatbot Interface:** Provides real-time, interactive responses to user queries, enhancing the overall user experience.
 
+---
 
+## 🚀 Phases of Development
 
+### 1. Phase-1: Individual CV Analysis
+
+We’ve successfully deployed Phase-1 of the CV Chatbot, which supports **CV analysis for individual resumes**.
+
+Check it out here:
+👉 [CV Chatbot Phase-1 Demo](https://cv-chatbot-analyzer.streamlit.app/) 👈
+
+   - **Features**:
+     - Upload a single CV for analysis.
+     - Extract and process key information like skills, education, and work experience.
+
+### 2. Phase-2: Batch Processing and Database Integration
+   - **Key Updates**:
+     - Google Drive Integration:
+       - Upload up to 100 CVs into a designated Google Drive folder.
+       - Process each CV into Markdown format.
+       - Store Markdown files in another Google Drive folder.
+     - Pinecone Database:
+       - Upsert the converted Markdown files into a Pinecone Vector Database for efficient storage and retrieval.
+     - React Frontend Features:
+       - Job Candidate Search:
+          - Enter a job description to retrieve a list of relevant job candidates.
+       - Candidate Chatbot:
+          - Select a candidate from the list to generate a chatbot.
+          - Ask specific questions about the selected candidate, and receive detailed responses.
+            
+### 3. Phase-3: Advanced Search and Large CV Support
+   - **Planned Enhancements**:
+     - Hybrid Search:
+       - Combine vector search with keyword-based search for better accuracy.
+     - Large CV Handling:
+       - Chunk large CVs into smaller pieces for scalable storage in the Pinecone database.
+     - Accuracy Improvements:
+       - Refine algorithms to provide precise and relevant search results.
+
+---
+
+## 🛠️ Technology Stack
+1. **Phase-1**:
+   - Python
+   - Streamlit
+2. **Phase-2**:
+   - Google Drive API
+   - Markdownify
+   - Pinecone Database
+   - LlamaIndex
+   - React
+3. **Phase-3**:
+   - Advanced Pinecone capabilities
+   - Hybrid search algorithms
